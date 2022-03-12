@@ -16,6 +16,7 @@ db.create("guild", "chatbot", "guild_id INTEGER PRIMARY KEY NOT NULL, channel_id
 db.create("guild", "warnings", "guild_id INTEGER, user_id INTEGER, mod_id INTEGER, reason TEXT, id INTEGER")
 db.create("guild", "tickets", "guild_id INTEGER, ticket_category_id INTEGER, ticket_mod_roles TEXT, ticket_log_channel_id INTEGER, ticket_open_message TEXT")
 db.create("guild", "ticket_data", "guild_id INTEGER, channel_id INTEGER, name TEXT, creator_id INTEGER, closed_by_id INTEGER, open_time TEXT, close_time TEXT, ticket_open_reason TEXT, transcript TEXT")
+db.create("guild", "reaction_roles", " message_id INTEGER, role_id INTEGER, emoji TEXT")
 
 # Bot DB
     # Config Table
