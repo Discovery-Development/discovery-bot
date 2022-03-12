@@ -11,13 +11,16 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Purges the channel.")
+    @commands.command(help="Purges the channel.", aliases=["clear"])
     @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx, limit: int):
         if limit > 200 or limit < 1:
             await ctx.reply("The minimium value is **`1`** and the maximum **`200`**.", mention_author=False)
             return
-        msgs_deleted = await ctx.channel.purge(limit=limit+1)
+        try:
+            msgs_deleted = await ctx.channel.purge(limit=limit+1)
+        except discord.HTTPException:
+            pass
         msgs_deleted = len(msgs_deleted)-1
         if msgs_deleted == 1:
             text = "one message"
