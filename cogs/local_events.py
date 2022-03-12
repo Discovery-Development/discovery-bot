@@ -45,6 +45,7 @@ class local_events(commands.Cog):
             embed = discord.Embed(color=colors.fail, title=title, description=f"You, {ctx.author} {text}")
             await ctx.reply(embed=embed, mention_author=False)
         else:
+            print(error)
             channel = self.bot.get_channel(939928959536218162)
             await channel.send(f"{error}\nHas been caused by the message: '{ctx.message.content}'")
 

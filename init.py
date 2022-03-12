@@ -164,3 +164,19 @@ try:
     db.modify("guild", "ALTER TABLE ticket_data ADD COLUMN transcript TEXT")
 except sqlite3.OperationalError: # Just ignore the error if the column already exists
     pass
+
+# reaction_roles table is
+try:
+    db.modify("guild", "ALTER TABLE reaction_roles ADD COLUMN message_id INTEGER")
+except sqlite3.OperationalError: # Just ignore the error if the column already exists
+    pass
+
+try:
+    db.modify("guild", "ALTER TABLE reaction_roles ADD COLUMN role_id INTEGER")
+except sqlite3.OperationalError: # Just ignore the error if the column already exists
+    pass
+
+try:
+    db.modify("guild", "ALTER TABLE reaction_roles ADD COLUMN emoji TEXT")
+except sqlite3.OperationalError: # Just ignore the error if the column already exists
+    pass
