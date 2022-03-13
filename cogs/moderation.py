@@ -30,7 +30,10 @@ class Moderation(commands.Cog):
             text = f"**`{msgs_deleted}`** messages"
         m = await ctx.send(f"Successfully deleted {text}. This message will be deleted in 5 seconds.")
         await asyncio.sleep(5)
-        await m.delete()
+        try:
+            await m.delete()
+        except discord.HTTPException:
+            pass
 
     # Warning System
 
@@ -57,7 +60,7 @@ class Moderation(commands.Cog):
         await ctx.reply(f"**`User`**: {user.mention}\n**`Reason`**: {reason}", mention_author=False)
 
 
-    @warns.command(aliases=["list"], help="Shows someone's warnings.")
+    @warns.command(aliases=["list"], help="Shows all warnings in the guild.")
     @commands.has_permissions(moderate_members=True)
     async def view(self, ctx):
         fetch = db.fetchall("guild", "SELECT * FROM warnings WHERE guild_id = ?", (ctx.guild.id,))
@@ -78,7 +81,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_channels=True)
     async def remove(self, ctx, warn_id: int = None):
         if warn_id is None:
-            await ctx.reply("Please specify the warning ID.\nYou can find this ID by using `warn list`", mention_author=False)
+            await ctx.reply("Please specify the warning ID.\nYou can find this ID by using `warns list`", mention_author=False)
             return
 
         db.modify("guild", "DELETE FROM warnings WHERE guild_id = ? AND id = ?", (ctx.guild.id, warn_id,))
