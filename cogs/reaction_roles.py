@@ -34,8 +34,9 @@ class ReactionRoles(commands.Cog):
         fetch = db.fetchall("guild", "SELECT * FROM reaction_roles WHERE guild_id = ?", (ctx.guild.id,))
 
         fetch_embed = discord.Embed(title=f"Reaction roles in {ctx.guild.name}", color=discord.Color(0xF37F7F), description="")
-        for reaction_role in fetch and fetch:
-            fetch_embed.description += f"\nMessage ID: {reaction_role[0]}\nRole: <@&{reaction_role[1]}>\nEmoji: {reaction_role[2]}\n"
+        if fetch and fetch != () and fetch != []:
+            for reaction_role in fetch:
+                fetch_embed.description += f"\nMessage ID: {reaction_role[0]}\nRole: <@&{reaction_role[1]}>\nEmoji: {reaction_role[2]}\n"
 
         if fetch is None or fetch == () or fetch == []:
             fetch_embed.description = "No reaction roles have been added."
