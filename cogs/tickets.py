@@ -90,6 +90,8 @@ class choose_ticket_reason(View):
 
         db.modify("guild","INSERT INTO ticket_data(guild_id, channel_id, name, creator_id, open_time, ticket_open_reason) VALUES(?,?,?,?,?,?)", binds)
 
+        await ticket_channel.set_permissions(interaction.user, view_channel=True, read_message_history=True, send_messages=True, attach_files=True)
+
         ticket_log_channel_id = db.fetch("guild", f"SELECT ticket_log_channel_id FROM tickets WHERE guild_id = {interaction.guild.id}")
 
         ticket_log_channel = discord.utils.get(interaction.guild.text_channels, id=ticket_log_channel_id)
@@ -359,7 +361,7 @@ class Tickets(commands.Cog):
                 await ticket_log_channel.send(embed=ticket_log_embed, file=discord.File(f"./tmp/ticket-{ticket_creator_id}-{channel.guild.id}.log", filename=f"transcript-{ticket_name}.log"))
                 os.remove(f"./tmp/ticket-{ticket_creator_id}-{channel.guild.id}.log")
 
-                db.modify("guild", f"DELETE FROM ticket_data WHERE channel_id = {channel.id}")
+            db.modify("guild", f"DELETE FROM ticket_data WHERE channel_id = {channel.id}")
 
 
 def setup(bot):
