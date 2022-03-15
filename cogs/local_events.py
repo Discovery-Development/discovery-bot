@@ -31,6 +31,9 @@ class local_events(commands.Cog):
             await ctx.reply(embed=error_embed, mention_author=False)
         elif isinstance(error, commands.CommandNotFound):
             pass
+        elif isinstance(error, commands.CommandOnCooldown):
+            cooldown_active_embed = discord.Embed(title=f"**On cooldown**", description=f"You're still on cooldown! Please try again in **{round(error.retry_after / 60)}** minutes.", color=colors.default)
+            await ctx.reply(embed=cooldown_active_embed, mention_author=False)
         elif isinstance(error, commands.MissingPermissions):
             if len(error.missing_permissions) <= 1:
                 permission = error.missing_permissions[0]

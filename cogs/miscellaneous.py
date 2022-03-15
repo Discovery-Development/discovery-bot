@@ -1,4 +1,5 @@
 import asyncio
+from http import server
 import discord
 import main
 from discord.ext import commands 
@@ -84,6 +85,20 @@ class Miscellaneous(commands.Cog):
         userinfo_embed.add_field(name="Activity", value=f"{member_activity_type}: {str(member_activity).capitalize()}", inline=True)
 
         await ctx.reply(embed=userinfo_embed, mention_author=False)
+
+    @commands.command()
+    async def serverinfo(self, ctx):
+        server_info_embed = discord.Embed(title=ctx.guild.name, color=colors.default)
+        if ctx.guild.icon is not None:
+            server_info_embed.set_thumbnail(url=ctx.guild.icon.url)
+        server_info_embed.description = f"**ID**: {ctx.guild.id}\n**Owner**: <@{ctx.guild.owner_id}>\n**Creation Time**: `{ctx.guild.created_at.strftime('%d-%m-%Y--%H-%M-%S')}`"
+        server_info_embed.add_field(name="Members", value=f"Humans: {len([member for member in ctx.guild.members if not member.bot])}\nBots: {len([bot for bot in ctx.guild.members if bot.bot])}", inline=False)
+        server_info_embed.add_field(name="Channels", value=f"🔊 Voice channels: {len(ctx.guild.voice_channels)}\n💬 Text Channels: {len(ctx.guild.text_channels)}\nCategories: {len(ctx.guild.categories)}", inline=False)
+        server_info_embed.add_field(name="Emojis", value=f"Regular: {len([emoji for emoji in ctx.guild.emojis if not emoji.animated])}\nAnimated: {len([emoji for emoji in ctx.guild.emojis if emoji.animated])}\nLimit: {ctx.guild.emoji_limit}", inline=False)
+        server_info_embed.add_field(name="Boosts", value=f"Boost Level: {ctx.guild.premium_tier}\nBoosts: {ctx.guild.premium_subscription_count}", inline=False)
+        server_info_embed.add_field(name="Roles", value=f"Roles: {len(ctx.guild.roles)}", inline=False)
+
+        await ctx.reply(embed=server_info_embed, mention_author=False)
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))

@@ -12,9 +12,10 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @commands.command(help="Purges the channel.", aliases=["clear"])
+    @commands.cooldown(1, 10)
     @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx, limit: int):
-        if limit > 200 or limit < 1:
+        if limit > 100 or limit < 1:
             await ctx.reply("The minimium value is **`1`** and the maximum **`200`**.", mention_author=False)
             return
         try:
