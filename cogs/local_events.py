@@ -50,7 +50,8 @@ class local_events(commands.Cog):
         else:
             print(error)
             channel = self.bot.get_channel(939928959536218162)
-            await channel.send(f"{error}\nHas been caused by the message: '{ctx.message.content}'")
+            if channel:
+                await channel.send(f"{error}\nHas been caused by the message: '{ctx.message.content}'")
 
 
 def setup(bot):
