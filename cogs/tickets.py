@@ -1,5 +1,4 @@
 import asyncio
-from click import style
 import discord
 from discord.ext import commands
 from struc import database, funcs, colors
