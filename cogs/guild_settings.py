@@ -1,5 +1,4 @@
 import discord
-import main
 from struc import database, colored, emojis, colors, get_guild_values
 from discord.ext import commands
 db = database

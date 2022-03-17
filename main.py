@@ -1,6 +1,6 @@
 import sqlite3
 from abc import ABC
-
+#from dotenv import load_dotenv
 import discord
 import os
 from discord.ext import commands
@@ -9,23 +9,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 db = database
 
+#load_dotenv()
+
 intents = discord.Intents.all()
-
-
-def get_token():
-    # create config table
-    token = db.fetch("bot", "SELECT token FROM config")
-    if not token:
-        print(f"{colored.FAIL}NO TOKEN SPECIFIED.{colored.RESET}")
-        token_input = input(f"{colored.HINT}Please paste the token here to run the bot: {colored.RESET}")
-        try:
-            db.modify("bot", "INSERT INTO config(token) VALUES(?)", (token_input,))
-            print(f"{colored.SUCCESS}TOKEN SAVED{colored.RESET}")
-        except:
-            print(f"{colored.WARNING}SOMETHING WENT WRONG.{colored.RESET}")
-    # Fetch the token once it was entered by the user
-    token = db.fetch("bot", "SELECT token FROM config")
-    return token
 
 
 class Bot(commands.Bot, ABC):
@@ -50,7 +36,7 @@ class Bot(commands.Bot, ABC):
         print("Running setup...")
         self.setup()
         print("Starting bot.")
-        super().run(get_token(), reconnect=True)
+        super().run(os.environ.get("TOKEN"), reconnect=True)
 
     async def on_ready(self):
         if not self.ready:
