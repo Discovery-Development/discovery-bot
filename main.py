@@ -1,6 +1,6 @@
 import sqlite3
 from abc import ABC
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import discord
 import os
 from init import update_db
@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 db = database
 
-#load_dotenv()
+load_dotenv()
 
 intents = discord.Intents.all()
 
@@ -38,7 +38,9 @@ class Bot(commands.Bot, ABC):
         self.setup()
         print("Starting bot.")
         update_db()
-        super().run(os.environ.get("TOKEN"), reconnect=True)
+        if os.getenv("TOKEN"):
+            super().run(str(os.getenv("TOKEN")), reconnect=True)
+        super().run(str(os.environ.get("TOKEN")), reconnect=True)
 
     async def on_ready(self):
         if not self.ready:
