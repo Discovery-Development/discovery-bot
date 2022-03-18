@@ -2,7 +2,7 @@ import asyncio
 import discord
 from main import *
 import os
-from struc import funcs, colors
+from struc import funcs, colors, colored
 from discord.ext import commands
 
 class local_events(commands.Cog):

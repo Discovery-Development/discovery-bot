@@ -1,14 +1,12 @@
-import sqlite3
+
 from abc import ABC
 from dotenv import load_dotenv
 import discord
 import os
 from init import update_db
 from discord.ext import commands
-from struc import database, colored, emojis, colors, get_guild_values
+from struc import get_guild_values
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-db = database
 
 load_dotenv()
 

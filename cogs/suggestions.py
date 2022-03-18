@@ -2,8 +2,7 @@ from discord.ext import commands
 import discord
 from datetime import datetime
 import random
-from struc import database, get_guild_values
-db = database
+from struc import db, get_guild_values
 
 
 class SuggestionChannels(commands.Cog):
@@ -14,15 +13,12 @@ class SuggestionChannels(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.content.startswith(get_guild_values.prefix(self.bot, message)):
+    async def on_message(self, message: discord.Message):
+        if not type(message.channel) == discord.TextChannel or message.guild is None or message.content.startswith(get_guild_values.prefix(self.bot, message.channel)) is None or message.author == self.bot.user:
             return
-        if message.guild == None:
-            return
-        if message.author == self.bot.user:
-            return
-        suggestion_guild = db.fetch("guild", "SELECT guild_id FROM suggestions")
-        suggestion_channel = db.fetch("guild", "SELECT channel_id FROM suggestions WHERE guild_id = ?", (message.guild.id,))
+        
+        suggestion_guild = db.fetch("SELECT guild_id FROM suggestions;")
+        suggestion_channel = db.fetch("SELECT channel_id FROM suggestions WHERE guild_id = %s;", (message.guild.id,))
         if not suggestion_guild:
             return
         if not suggestion_channel:
@@ -62,16 +58,16 @@ class SuggestionChannels(commands.Cog):
         if not channel:
             channel = ctx.channel
 
-        db.modify("guild", "INSERT OR REPLACE INTO suggestions(guild_id, channel_id) VALUES(?,?)", (ctx.guild.id, channel.id))
+        db.modify("INSERT OR REPLACE INTO suggestions(guild_id, channel_id) VALUES(%s,%s);", (ctx.guild.id, channel.id))
         await ctx.reply(f"I successfully set {channel.mention} as suggestion channel. You can remove it by using `suggestions remove`.", mention_author=False)
 
 
     @suggestions.command(help="Removes the channel for suggestions.")
     @commands.has_permissions(manage_channels=True)
     async def remove(self, ctx):
-        suggestions_channel = db.fetch("guild", "SELECT channel_id FROM suggestions WHERE guild_ID = ?", (ctx.guild.id,))
+        suggestions_channel = db.fetch("SELECT channel_id FROM suggestions WHERE guild_ID = %s;", (ctx.guild.id,))
         if suggestions_channel:
-            db.modify("guild", "DELETE FROM suggestions WHERE guild_id = ?", (ctx.guild.id,))
+            db.modify("DELETE FROM suggestions WHERE guild_id = %s;", (ctx.guild.id,))
             await ctx.reply(f"I successfully removed <#{suggestions_channel}> as suggestion channel.", mention_author=False)
         else:
             await ctx.reply("A suggestion channel isn't set. You can add one by using `suggestions set`", mention_author=False)

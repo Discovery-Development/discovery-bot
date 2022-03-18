@@ -1,8 +1,8 @@
 import discord
 import asyncio
 from discord.ext import commands
-from struc import database
-db = database
+from struc import db
+
 
 class Moderation(commands.Cog):
     """
@@ -50,22 +50,22 @@ class Moderation(commands.Cog):
             await ctx.reply("Please specify a member.", mention_author=False)
             return
 
-        prev_warn_id = db.fetch("guild", "SELECT id FROM warnings ORDER BY id DESC LIMIT 1")
+        prev_warn_id = db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;")
 
         if prev_warn_id is None:
             prev_warn_id = -1
 
         next_warn_id = prev_warn_id + 1
 
-        db.modify("guild", "INSERT INTO warnings VALUES(?,?,?,?,?)", (ctx.guild.id, user.id, ctx.author.id, reason, next_warn_id))
+        db.modify("INSERT INTO warnings VALUES(%s,%s,%s,%s,%s);", (ctx.guild.id, user.id, ctx.author.id, reason, next_warn_id))
         await ctx.reply(f"**`User`**: {user.mention}\n**`Reason`**: {reason}", mention_author=False)
 
 
     @warns.command(aliases=["list"], help="Shows all warnings in the guild.")
     @commands.has_permissions(moderate_members=True)
     async def view(self, ctx):
-        fetch = db.fetchall("guild", "SELECT * FROM warnings WHERE guild_id = ?", (ctx.guild.id,))
-        warning_count = len(db.fetchall("guild", "SELECT guild_id FROM warnings WHERE guild_id = ?", (ctx.guild.id,)))
+        fetch = db.fetchall("SELECT * FROM warnings WHERE guild_id = %s;", (ctx.guild.id,))
+        warning_count = len(db.fetchall("SELECT guild_id FROM warnings WHERE guild_id = %s;", (ctx.guild.id,)))
 
         fetch_embed = discord.Embed(title=f"Warnings in {ctx.guild.name}", color=discord.Color(0xF37F7F), description="")
         fetch_embed.description = f"**Total count:** {warning_count}\n"
@@ -85,7 +85,7 @@ class Moderation(commands.Cog):
             await ctx.reply("Please specify the warning ID.\nYou can find this ID by using `warns list`", mention_author=False)
             return
 
-        db.modify("guild", "DELETE FROM warnings WHERE guild_id = ? AND id = ?", (ctx.guild.id, warn_id,))
+        db.modify("DELETE FROM warnings WHERE guild_id = %s AND id = %s;", (ctx.guild.id, warn_id,))
         await ctx.reply(f"Successfully removed warning with ID `{warn_id}`.", mention_author=False)
 
     @warns.command(help="Resets someone's warnings.")
@@ -96,7 +96,7 @@ class Moderation(commands.Cog):
             return
         
         await ctx.reply(f"Deleting all warnings of <@{user.id}>...", mention_author=False)
-        db.modify("guild", "DELETE FROM warnings WHERE user_id = ? AND guild_id = ?", (user.id, ctx.guild.id,))
+        db.modify("DELETE FROM warnings WHERE user_id = %s AND guild_id = %s;", (user.id, ctx.guild.id,))
         await ctx.reply(f"Successfully removed all warnings of <@{user.id}>.", mention_author=False)
 
 def setup(bot):

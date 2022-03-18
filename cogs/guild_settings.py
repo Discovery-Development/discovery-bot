@@ -1,7 +1,7 @@
 import discord
-from struc import database, colored, emojis, colors, get_guild_values
+from struc import db, colored, emojis, colors, get_guild_values
 from discord.ext import commands
-db = database
+
 class GuildSettings(commands.Cog):
     """
     Guild specific settings
@@ -12,18 +12,18 @@ class GuildSettings(commands.Cog):
 
     @commands.command(help="Sets the prefix for the bot on this server.")
     async def set_prefix(self, ctx, prefix: str):
-        guild = db.fetch("guild", f"SELECT guild_id FROM settings WHERE guild_id = ?", (ctx.guild.id,))
+        guild = db.fetch(f"SELECT guild_id FROM settings WHERE guild_id = %s;", (ctx.guild.id,))
 
         if guild is None:
-            sql = (f"INSERT INTO settings(guild_id, prefix) VALUES(?,?)")
+            sql = (f"INSERT INTO settings(guild_id, prefix) VALUES(%s,%s);")
             binds = (ctx.guild.id, prefix)
             await ctx.reply(f"Prefix has been set to `{prefix}`.", mention_author=False)
         elif guild is not None:
-            sql = (f"UPDATE settings SET prefix = ? WHERE guild_id = ?")
+            sql = (f"UPDATE settings SET prefix = %s WHERE guild_id = %s;")
             binds = (prefix, ctx.guild.id)
             await ctx.reply(f"Prefix has been updated to `{prefix}`.", mention_author=False)
         
-        db.modify("guild", sql, binds)
+        db.modify(sql, binds)
 
 
 def setup(bot):

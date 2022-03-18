@@ -7,6 +7,7 @@ from io import BytesIO
 from discord.ext import commands
 import random
 from struc import colors
+
 class Fun(commands.Cog):
     """
     All the fun commands.
