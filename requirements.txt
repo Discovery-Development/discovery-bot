@@ -2,3 +2,4 @@ hikari
 hikari[speedups]
 uvloop
 hikari-lightbulb
+psycopg2-binary
