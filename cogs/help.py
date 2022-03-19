@@ -79,7 +79,7 @@ class Help(commands.Cog):
         return self.pages
 
     
-    @slash_command(guild_ids=[943824727242321980])
+    @slash_command()
     async def help(self, ctx: discord.ApplicationContext):
         paginator = pages.Paginator(pages=self.get_pages())
         await paginator.respond(ctx.interaction, ephemeral=False)
