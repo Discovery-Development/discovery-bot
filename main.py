@@ -42,6 +42,10 @@ class Bot(commands.Bot, ABC):
         super().run(str(os.environ.get("TOKEN")), reconnect=True)
 
     async def on_ready(self):
+        print("Syncing commands...")
+        await bot.sync_commands(force=True)
+        print("Successfully synced commands.")
+
         if not self.ready:
             self.scheduler.start()
             self.ready = True

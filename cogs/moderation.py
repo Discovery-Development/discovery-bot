@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
 
     warns = SlashCommandGroup("warns", "Warning system")
 
-    @slash_command(guild_ids=[943824727242321980])
+    @slash_command()
     async def warn(self, ctx: discord.ApplicationContext, user: Option(discord.Member, "The member to warn"), reason: Option(str, "Reason for warn", required=False, default="No reason specified.")):
         if not ctx.author.guild_permissions.moderate_members:
             raise commands.MissingPermissions(["ModerateMembers"])
@@ -67,7 +67,7 @@ class Moderation(commands.Cog):
         await ctx.respond(f"**`User`**: {user.mention}\n**`Reason`**: {reason}")
 
 
-    @warns.command(guild_ids=[943824727242321980])
+    @warns.command()
     async def list(self, ctx: discord.ApplicationContext):
         if not ctx.author.guild_permissions.moderate_members:
             raise commands.MissingPermissions(["ModerateMembers"])
