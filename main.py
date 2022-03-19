@@ -7,6 +7,7 @@ from init import update_db
 from discord.ext import commands
 from struc import get_guild_values
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import psycopg2
 
 load_dotenv()
 
@@ -35,7 +36,7 @@ class Bot(commands.Bot, ABC):
         print("Running setup...")
         self.setup()
         print("Starting bot.")
-        update_db()
+        #update_db() Only uncomment if your code changes the DB
         if os.getenv("TOKEN"):
             super().run(str(os.getenv("TOKEN")), reconnect=True)
         super().run(str(os.environ.get("TOKEN")), reconnect=True)

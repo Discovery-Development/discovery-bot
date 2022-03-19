@@ -2,6 +2,12 @@ import discord
 import asyncio
 from discord.ext import commands
 from struc import db
+from discord.commands import (
+    slash_command,
+    Option,
+    SlashCommandGroup,
+    permissions
+)
 
 
 class Moderation(commands.Cog):
@@ -11,12 +17,13 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Purges the channel.", aliases=["clear"])
-    @commands.cooldown(1, 10)
-    @commands.has_permissions(manage_messages=True)
-    async def purge(self, ctx, limit: int):
+    @slash_command()
+    async def purge(self, ctx: discord.ApplicationContext, limit: Option(int, "The amount of messages to delete")):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
+
         if limit > 100 or limit < 1:
-            await ctx.reply("The minimium value is **`1`** and the maximum **`200`**.", mention_author=False)
+            await ctx.respond("The minimium value is **`1`** and the maximum **`200`**.")
             return
         try:
             msgs_deleted = await ctx.channel.purge(limit=limit+1)
@@ -29,7 +36,7 @@ class Moderation(commands.Cog):
             text = "no message"
         else:
             text = f"**`{msgs_deleted}`** messages"
-        m = await ctx.send(f"Successfully deleted {text}. This message will be deleted in 5 seconds.")
+        m = await ctx.respond(f"Successfully deleted {text}. This message will be deleted in 5 seconds.")
         await asyncio.sleep(5)
         try:
             await m.delete()
@@ -38,16 +45,15 @@ class Moderation(commands.Cog):
 
     # Warning System
 
-    @commands.group(name='warns', invoke_without_command=True, help="Warning system")
-    @commands.has_permissions(moderate_members=True)
-    async def warns(self, ctx):
-        await ctx.reply("Use the help command.",mention_author=False)
+    warns = SlashCommandGroup("warns", "Warning system")
 
-    @commands.command(help="Warns someone.")
-    @commands.has_permissions(moderate_members=True)
-    async def warn(self, ctx, user: discord.Member = None, *,   reason="**No reason specified.**"):
+    @slash_command()
+    async def warn(self, ctx: discord.ApplicationContext, user: Option(discord.Member, "The member to warn"), reason: Option(str, "Reason for warn", required=False, default="No reason specified.")):
+        if not ctx.author.guild_permissions.moderate_members:
+            raise commands.MissingPermissions(["ModerateMembers"])
+            
         if not user:
-            await ctx.reply("Please specify a member.", mention_author=False)
+            await ctx.respond("Please specify a member.")
             return
 
         prev_warn_id = db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;")
@@ -58,12 +64,14 @@ class Moderation(commands.Cog):
         next_warn_id = prev_warn_id + 1
 
         db.modify("INSERT INTO warnings VALUES(%s,%s,%s,%s,%s);", (ctx.guild.id, user.id, ctx.author.id, reason, next_warn_id))
-        await ctx.reply(f"**`User`**: {user.mention}\n**`Reason`**: {reason}", mention_author=False)
+        await ctx.respond(f"**`User`**: {user.mention}\n**`Reason`**: {reason}")
 
 
-    @warns.command(aliases=["list"], help="Shows all warnings in the guild.")
-    @commands.has_permissions(moderate_members=True)
-    async def view(self, ctx):
+    @warns.command()
+    async def list(self, ctx: discord.ApplicationContext):
+        if not ctx.author.guild_permissions.moderate_members:
+            raise commands.MissingPermissions(["ModerateMembers"])
+
         fetch = db.fetchall("SELECT * FROM warnings WHERE guild_id = %s;", (ctx.guild.id,))
         warning_count = len(db.fetchall("SELECT guild_id FROM warnings WHERE guild_id = %s;", (ctx.guild.id,)))
 
@@ -75,29 +83,32 @@ class Moderation(commands.Cog):
         if fetch is None or fetch == () or fetch == []:
             fetch_embed.description = "No users have been warned!"
 
-        await ctx.reply(embed=fetch_embed, mention_author=False)
+        await ctx.respond(embed=fetch_embed)
 
 
-    @warns.command(aliases=["delete", "rm", "del"], help="Removes a warning from someone.")
-    @commands.has_permissions(manage_channels=True)
-    async def remove(self, ctx, warn_id: int = None):
+    @warns.command()
+    async def remove(self, ctx: discord.ApplicationContext, warn_id: Option(int, "The ID of the warn")):
+        if not ctx.author.guild_permissions.moderate_members:
+            raise commands.MissingPermissions(["ModerateMembers"])
+
         if warn_id is None:
-            await ctx.reply("Please specify the warning ID.\nYou can find this ID by using `warns list`", mention_author=False)
+            await ctx.respond("Please specify the warning ID.\nYou can find this ID by using `warns list`")
             return
 
         db.modify("DELETE FROM warnings WHERE guild_id = %s AND id = %s;", (ctx.guild.id, warn_id,))
-        await ctx.reply(f"Successfully removed warning with ID `{warn_id}`.", mention_author=False)
+        await ctx.respond(f"Successfully removed warning with ID `{warn_id}`.")
 
-    @warns.command(help="Resets someone's warnings.")
-    @commands.has_permissions(manage_channels=True)
-    async def reset(self, ctx, user: discord.Member = None):
+    @warns.command()
+    async def reset(self, ctx: discord.ApplicationContext, user: Option(discord.Member, "The member's warns whose to reset")):
+        if not ctx.author.guild_permissions.moderate_members:
+            raise commands.MissingPermissions(["ModerateMembers"])
+
         if not user:
-            await ctx.reply("Please specify a member.", mention_author=False)
+            await ctx.respond("Please specify a member.")
             return
         
-        await ctx.reply(f"Deleting all warnings of <@{user.id}>...", mention_author=False)
         db.modify("DELETE FROM warnings WHERE user_id = %s AND guild_id = %s;", (user.id, ctx.guild.id,))
-        await ctx.reply(f"Successfully removed all warnings of <@{user.id}>.", mention_author=False)
+        await ctx.respond(f"Successfully removed all warnings of <@{user.id}>.")
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

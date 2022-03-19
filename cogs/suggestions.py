@@ -3,6 +3,11 @@ import discord
 from datetime import datetime
 import random
 from struc import db, get_guild_values
+from discord.commands import (
+    slash_command,
+    Option,
+    SlashCommandGroup
+)
 
 
 class SuggestionChannels(commands.Cog):
@@ -31,7 +36,7 @@ class SuggestionChannels(commands.Cog):
                 suggestion = f"""{message.content}"""
                 await message.delete()
                 if not 8 <= len(message.content) <= 1000:
-                    await channel.send(f"{message.author.mention} Too short/long", mention_author=False, delete_after=4)
+                    await channel.send(f"{message.author.mention} Too short/long", delete_after=4)
                     return
                 
                 suggestion_embed = discord.Embed(title="Suggestion", description=f"{suggestion}", color=discord.Color(random.choice(colors)), timestamp=datetime.now())
@@ -40,37 +45,40 @@ class SuggestionChannels(commands.Cog):
                 suggestion_embed.set_image(url="https://i.ibb.co/1qfLq38/hr.png")
                 msg = await channel.send(embed=suggestion_embed)
                 direct = await message.author.create_dm()
-                await direct.send(f"Thanks for your suggestion in **{message.guild}**! Your suggestion was:\n>>> {suggestion}")
+                try:
+                    await direct.send(f"Thanks for your suggestion in **{message.guild}**! Your suggestion was:\n>>> {suggestion}")
+                except discord.errors.Forbidden:
+                    pass
                 await msg.add_reaction("👍")
                 await msg.add_reaction("🤷")
                 await msg.add_reaction("👎")
 
-
-    @commands.group(name='suggestions', invoke_without_command=True)
-    @commands.has_permissions(manage_channels=True)
-    async def suggestions(self, ctx):
-        await ctx.reply("Use `help suggestions` for help.", mention_author=False)
+    suggestions = SlashCommandGroup("suggestions", "Suggestions system")
     
 
-    @suggestions.command(help="Sets the channel for suggestions.")
-    @commands.has_permissions(manage_channels=True)
-    async def set(self, ctx, channel: discord.TextChannel = None):
+    @suggestions.command()
+    async def set(self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel, "The suggestions channel")):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
+
         if not channel:
             channel = ctx.channel
 
-        db.modify("INSERT OR REPLACE INTO suggestions(guild_id, channel_id) VALUES(%s,%s);", (ctx.guild.id, channel.id))
-        await ctx.reply(f"I successfully set {channel.mention} as suggestion channel. You can remove it by using `suggestions remove`.", mention_author=False)
+        db.modify("INSERT INTO suggestions(guild_id, channel_id) VALUES(%s,%s) ON CONFLICT (guild_id) DO UPDATE SET channel_id = %s;", (ctx.guild.id, channel.id, channel.id))
+        await ctx.respond(f"I successfully set {channel.mention} as suggestion channel. You can remove it by using `suggestions remove`.")
 
 
-    @suggestions.command(help="Removes the channel for suggestions.")
-    @commands.has_permissions(manage_channels=True)
-    async def remove(self, ctx):
-        suggestions_channel = db.fetch("SELECT channel_id FROM suggestions WHERE guild_ID = %s;", (ctx.guild.id,))
+    @suggestions.command()
+    async def remove(self, ctx: discord.ApplicationContext):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
+
+        suggestions_channel = db.fetch("SELECT channel_id FROM suggestions WHERE guild_id = %s;", (ctx.guild.id,))
         if suggestions_channel:
             db.modify("DELETE FROM suggestions WHERE guild_id = %s;", (ctx.guild.id,))
-            await ctx.reply(f"I successfully removed <#{suggestions_channel}> as suggestion channel.", mention_author=False)
+            await ctx.respond(f"I successfully removed <#{suggestions_channel}> as suggestion channel.")
         else:
-            await ctx.reply("A suggestion channel isn't set. You can add one by using `suggestions set`", mention_author=False)
+            await ctx.respond("A suggestion channel isn't set. You can add one by using `suggestions set`")
 
 def setup(bot):
     bot.add_cog(SuggestionChannels(bot))

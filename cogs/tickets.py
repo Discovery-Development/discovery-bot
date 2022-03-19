@@ -1,9 +1,15 @@
 import asyncio
+from email.policy import default
 import discord
 from discord.ext import commands
 from struc import db, funcs, colors
 from discord.ui import Button, Select,View
 import os
+from discord.commands import (
+    slash_command,
+    Option,
+    SlashCommandGroup
+)
 
 class ticket_components(View):
     def __init__(self):
@@ -147,19 +153,26 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Sends the button to open a ticket.")
-    @commands.has_permissions(administrator=True)
-    async def ticket_embed(self, ctx):
+    tickets = SlashCommandGroup("tickets", "The ticket system")
+
+    @tickets.command()
+    async def send(self, ctx: discord.ApplicationContext):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+
         create_ticket_embed = discord.Embed(title="Ticket", description=f"Press the button below to create a ticket.", color=colors.default)
 
         view = View(timeout=None)
         view.add_item(create_ticket_button())
 
+        await ctx.respond("Ticket embed created.", ephemeral=True)
         await ctx.send(embed=create_ticket_embed, view=view)
 
-    @commands.command(help="Sets the roles to answer tickets.")
-    @commands.has_permissions(administrator=True)
-    async def setticketmodroles(self, ctx, mod_roles: str):
+    @tickets.command()
+    async def modroles(self, ctx: discord.ApplicationContext, mod_roles: Option(str, "The ticket moderation roles")):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+
         mod_roles = mod_roles.replace(" ", "")
         mod_roles = mod_roles.split(";")
 
@@ -182,16 +195,18 @@ class Tickets(commands.Cog):
         
         db.modify(sql, binds)
 
-        await ctx.reply(f"Successfully set ticket moderation roles.", mention_author=False)
+        await ctx.respond(f"Successfully set ticket moderation roles.")
 
 
-    @commands.command(help="Set the category to open tickets in.")
-    @commands.has_permissions(administrator=True)
-    async def setticketcategory(self, ctx, ticket_category: discord.CategoryChannel):
+    @tickets.command()
+    async def category(self, ctx: discord.ApplicationContext, ticket_category: Option(discord.CategoryChannel, "The ticket category")):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+
         ticket_mod_roles_txt = db.fetch(f"SELECT ticket_mod_roles FROM tickets WHERE guild_id = {ctx.guild.id};")
 
         if ticket_mod_roles_txt is None:
-            await ctx.reply(f"Please set up ticket moderation roles first!", mention_author=False)
+            await ctx.respond(f"Please set up ticket moderation roles first!")
 
         ticket_mod_roles = str(ticket_mod_roles_txt).split(";")
 
@@ -219,11 +234,13 @@ class Tickets(commands.Cog):
 
         ticket_category_id = db.fetch(f"SELECT ticket_category_id FROM tickets WHERE guild_id = {ctx.guild.id};")
 
-        await ctx.send(f"The ticket category has been set to <#{ticket_category_id}>")
+        await ctx.respond(f"The ticket category has been set to <#{ticket_category_id}>")
 
-    @commands.command(help="Sets the channel to send ticket logs.")
-    @commands.has_permissions(administrator=True)
-    async def setticketlogchannel(self, ctx, ticket_log_channel: discord.TextChannel):
+    @tickets.command()
+    async def logchannel(self, ctx: discord.ApplicationContext, ticket_log_channel: Option(discord.TextChannel, "The ticket log channel")):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+
         guild = db.fetch(f"SELECT guild_id FROM tickets WHERE guild_id = {ctx.guild.id};")
 
         if guild is None:
@@ -237,11 +254,13 @@ class Tickets(commands.Cog):
 
         ticket_log_channel_id = db.fetch(f"SELECT ticket_log_channel_id FROM tickets WHERE guild_id = {ctx.guild.id};")
 
-        await ctx.send(f"The ticket log channel has been set to <#{ticket_log_channel_id}>")
+        await ctx.respond(f"The ticket log channel has been set to <#{ticket_log_channel_id}>")
 
-    @commands.command(help="Sets the message that will appear when you open a ticket.")
-    @commands.has_permissions(administrator=True)
-    async def setticketopenmsg(self, ctx, *, ticket_open_message: str):
+    @tickets.command()
+    async def openmsg(self, ctx: discord.ApplicationContext, ticket_open_message: Option(str, "The ticket open message")):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+
         guild = db.fetch(f"SELECT guild_id FROM tickets WHERE guild_id = {ctx.guild.id};")
 
         if guild is None:
@@ -255,14 +274,17 @@ class Tickets(commands.Cog):
 
         ticket_open_message = db.fetch(f"SELECT ticket_open_message FROM tickets WHERE guild_id = {ctx.guild.id};")
 
-        await ctx.send(f"The ticket open message has been set to ```{ticket_open_message}```")
+        await ctx.respond(f"The ticket open message has been set to ```{ticket_open_message}```")
     
-    @commands.command(help="Closes a ticket.")
-    async def close(self, ctx, reason="No reason was specified."):
+    @slash_command()
+    async def close(self, ctx: discord.ApplicationContext, reason: Option(str, "Reason for closing ticket", required=False, default="No reason was specified.")):
+        if not ctx.author.guild_permissions.administrator:
+            raise commands.MissingPermissions(["Administrator"])
+            
         ticket = db.fetch(f"SELECT channel_id FROM ticket_data WHERE channel_id = {ctx.channel.id};")
 
         if ticket is None:
-            await ctx.reply("This channel is not a ticket!", mention_author=False)
+            await ctx.respond("This channel is not a ticket!")
             return
 
         db.modify("UPDATE ticket_data SET closed_by_id = %s WHERE channel_id = %s;", (ctx.author.id, ctx.channel.id))
@@ -297,7 +319,7 @@ class Tickets(commands.Cog):
 
         db.modify(f"DELETE FROM ticket_data WHERE channel_id = {ctx.channel.id};")
 
-        await ctx.reply("This ticket will be closed in 3 seconds...", mention_author=False)
+        await ctx.respond("This ticket will be closed in 3 seconds...")
         await asyncio.sleep(3)
         await ctx.channel.delete(reason=f"Ticket was closed by {ctx.author}.")
     

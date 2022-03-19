@@ -7,6 +7,10 @@ from io import BytesIO
 from discord.ext import commands
 import random
 from struc import colors
+from discord.commands import (
+    slash_command,
+    Option
+)
 
 class Fun(commands.Cog):
     """
@@ -15,15 +19,15 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Moves someone to the trash.")
-    async def trash(self, ctx, target:discord.Member = None):
+    @slash_command()
+    async def trash(self, ctx: discord.ApplicationContext, target: Option(discord.User, "The user to move to the trash")):
         content = None
         if not target:
             target = ctx.author
         if target == ctx.author:
             content = "You want to delete yourself? Good!"
         if target == self.bot.user:
-            await ctx.reply("I'm not trash.", mention_author=False)
+            await ctx.respond("I'm not trash.")
             return
         source_img = Image.open("./assets/trash.jpg")
         asset = target.avatar
@@ -36,13 +40,13 @@ class Fun(commands.Cog):
 
         draw.text((12,8), f"Delete {target}",(0,0,0), font=font)
         source_img.save("./tmp/trash_gen.jpg")
-        await ctx.reply(file = discord.File("./tmp/trash_gen.jpg", filename=f"trash_{target.id}.jpg"), content=content, mention_author=False)
+        await ctx.respond(file = discord.File("./tmp/trash_gen.jpg", filename=f"trash_{target.id}.jpg"), content=content)
         os.remove("./tmp/trash_gen.jpg")
     
-    @commands.command(aliases=['8ball'], help="Asks the magic ball a question.")
-    async def m8ball(self, ctx, *, question: str):
+    @slash_command()
+    async def m8ball(self, ctx: discord.ApplicationContext, question: Option(str, "Your question")):
         if not 5 <= len(question) <= 25:
-            await ctx.reply("The minimium question lenght is **`5`** and the maximum **`25`**.", mention_author=False)
+            await ctx.respond("The minimium question lenght is **`5`** and the maximum **`25`**.")
             return
         responses = ["It is certain.",
                  "It is decidedly so.",
@@ -68,10 +72,10 @@ class Fun(commands.Cog):
                  "sorry I dont answer nerds"]
 
         answer = random.choice(responses)
-        await ctx.reply(f'**`Your question:`** {question}\n\n**`My answer:`** "{answer}"', mention_author=False)
+        await ctx.respond(f'**`Your question:`** {question}\n\n**`My answer:`** "{answer}"')
 
-    @commands.command(help="Kills someone.")
-    async def rip(self, ctx, target: discord.User=None):
+    @slash_command()
+    async def rip(self, ctx: discord.ApplicationContext, target: Option(discord.User, "The user... to ban from life")):
         if target is None:
             target = ctx.author
 
@@ -83,13 +87,13 @@ class Fun(commands.Cog):
         tombstone_img.paste(pfp, (260, 180))
         tombstone_img.save(f"./tmp/tombstone-{target.id}.jpg")
 
-        await ctx.reply(file = discord.File(f"./tmp/tombstone-{target.id}.jpg", filename=f"rip_{target.id}.jpg"), mention_author=False)
+        await ctx.respond(file = discord.File(f"./tmp/tombstone-{target.id}.jpg", filename=f"rip_{target.id}.jpg"))
         os.remove(f"./tmp/tombstone-{target.id}.jpg")
 
-    @commands.command(help="Googles something for you.")
-    async def google(self, ctx, *, text: str):
+    @slash_command()
+    async def google(self, ctx: discord.ApplicationContext, text: Option(str, "The text to google")):
         if not 4 < len(text) < 40:
-            await ctx.reply("Too short or too long", mention_author=False)
+            await ctx.respond("Too short or too long")
             return
 
         userid = ctx.author.id
@@ -100,11 +104,11 @@ class Fun(commands.Cog):
 
         draw.text((324,237), text,(49,49,49), font=font)
         google_screenshot.save(f"./tmp/google-{userid}.jpg")
-        await ctx.reply(file = discord.File(f"./tmp/google-{userid}.jpg", filename=f"google_{userid}.jpg"), mention_author=False)
+        await ctx.respond(file = discord.File(f"./tmp/google-{userid}.jpg", filename=f"google_{userid}.jpg"))
         os.remove(f"./tmp/google-{userid}.jpg")
 
     
-    @commands.command(help="LIES DIE VERFICKTE ANLEITUNG!")
+    @slash_command()
     async def ldva(self, ctx):
         embed = discord.Embed(
             title="Lies die verfickte Anleitung!",
@@ -120,10 +124,10 @@ class Fun(commands.Cog):
             colour=discord.Colour.orange())
         async with ctx.typing():
             await asyncio.sleep(1.5)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.respond(embed=embed)
     
     
-    @commands.command(help="READ THE FUCKING MANUAL!")
+    @slash_command()
     async def rtfm(self, ctx):
         embed = discord.Embed(
             title="Read the f*cking manual!",
@@ -137,10 +141,10 @@ class Fun(commands.Cog):
             colour=discord.Colour.orange())
         async with ctx.typing():
             await asyncio.sleep(1.5)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.respond(embed=embed)
 
-    @commands.command(help="Makes someone a clown.")
-    async def clown(self, ctx, target: discord.User=None):
+    @slash_command()
+    async def clown(self, ctx: discord.ApplicationContext, target: Option(discord.User, "The user to make a clown")):
         if not target:
             target = ctx.author
 
@@ -158,7 +162,7 @@ class Fun(commands.Cog):
         draw.text((360,230), f"{target}", (0,0,0), font=font)
         clown_image.save(f"./tmp/clown-{target.id}.jpg")
 
-        await ctx.reply(file = discord.File(f"./tmp/clown-{target.id}.jpg", filename=f"clown-{target.id}.jpg"), mention_author=False)
+        await ctx.respond(file = discord.File(f"./tmp/clown-{target.id}.jpg", filename=f"clown-{target.id}.jpg"))
         os.remove(f"./tmp/clown-{target.id}.jpg")
 
 def setup(bot):

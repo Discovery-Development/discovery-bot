@@ -18,6 +18,11 @@ import random
 from main import *
 from discord.ext import commands
 from struc import db
+from discord.commands import (
+    slash_command,
+    SlashCommandGroup,
+    Option
+)
 
 class Chatbot(commands.Cog):
     """
@@ -52,33 +57,29 @@ class Chatbot(commands.Cog):
 
                     chat_response = requests.get(chat_endpoint).json()
                     chat_message = chat_response["message"]
-                await message.reply(chat_message, mention_author=False)
+                await message.reply(chat_message)
 
+    chatbot = SlashCommandGroup("chatbot", "Chatbot commands")
 
-    @commands.group(name='chatbot', invoke_without_command=True)
-    @commands.has_permissions(manage_channels=True)
-    async def chatbot(self, ctx):
-        await ctx.reply("Use `help chatbot` for help.", mention_author=False)
-    
-    @chatbot.command(help="Sets the channel for the chatbot.")
-    @commands.has_permissions(manage_channels=True)
-    async def set(self, ctx, channel: discord.TextChannel = None):
-        if not channel:
-            channel = ctx.channel
+    @chatbot.command()
+    async def set(self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel, "The Textchannel for the chatbot.")):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
 
-        db.modify("INSERT OR REPLACE INTO chatbot(guild_id, channel_id) VALUES(%s,%s);", (ctx.guild.id, channel.id))
-        await ctx.reply(f"I successfully set {channel.mention} as chatbot channel. You can remove it by using `chatbot remove`.", mention_author=False)
+        db.modify("INSERT INTO chatbot(guild_id, channel_id) VALUES(%s,%s) ON CONFLICT (guild_id) DO UPDATE SET channel_id = %s;", (ctx.guild.id, channel.id, channel.id))
+        await ctx.respond(f"I successfully set {channel.mention} as chatbot channel. You can remove it by using `chatbot remove`.")
 
-
-    @chatbot.command(help="Removes the chatbot from the current chanel.")
-    @commands.has_permissions(manage_channels=True)
-    async def remove(self, ctx):
-        chatbot_channel = db.fetch("SELECT channel_id FROM chatbot WHERE guild_ID = %s;", (ctx.guild.id,))
+    @chatbot.command()
+    async def remove(self, ctx: discord.ApplicationContext):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
+            
+        chatbot_channel = db.fetch("SELECT channel_id FROM chatbot WHERE guild_id = %s;", (ctx.guild.id,))
         if chatbot_channel:
-            db.modify("DELETE FROM chatbot WHERE guild_id = %s;", (ctx.guild.id,))
-            await ctx.reply(f"I successfully removed <#{chatbot_channel}> as chatbot channel.", mention_author=False)
+            db.modify(f"DELETE FROM chatbot WHERE guild_id = {ctx.guild.id};")
+            await ctx.respond(f"I successfully removed <#{chatbot_channel}> as chatbot channel.")
         else:
-            await ctx.reply("A chatbot channel isn't set. You can add one by using `chatbot set`", mention_author=False)
+            await ctx.respond("A chatbot channel isn't set. You can add one by using `chatbot set`")
 
 
 def setup(bot):

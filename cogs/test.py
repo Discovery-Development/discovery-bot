@@ -6,6 +6,10 @@ from PIL import Image, ImageOps, ImageDraw
 from datetime import datetime
 from struc import colors
 import json
+from discord.commands import (
+    slash_command,
+    Option
+)
 
 class Test(commands.Cog):
     """
@@ -16,7 +20,7 @@ class Test(commands.Cog):
         self.bot = bot
     
 
-    @commands.command(help="Apply to join our team.")
+    @slash_command(help="Apply to join our team.")
     async def team(self, ctx):
         await ctx.message.delete()
         embedd = discord.Embed(title="Be a part of our team", colour=discord.Colour(
@@ -28,9 +32,9 @@ class Test(commands.Cog):
         We are currently looking for any kind of team members: Developer, Moderator, etc. If you are interested, feel free to contact us!
         
         """
-        await ctx.reply(embed=embedd, mention_author=False)
+        await ctx.respond(embed=embedd)
 
-    @commands.command(help="Sends a changelog of the bot.")
+    @slash_command(help="Sends a changelog of the bot.")
     async def changelog(self, ctx):
         embed = discord.Embed(title="v2.1.0 - GalacticHippo", timestamp=datetime.now(), color=colors.default)
         embed.description = """
@@ -46,12 +50,12 @@ class Test(commands.Cog):
         """ 
         embed.set_thumbnail(
             url="https://i.ibb.co/n3Dd1h9/5a5a8a2214d8c4188e0b08e4.png")
-        await ctx.reply(embed=embed, content="<@&937389035343712327>", mention_author=False)
+        await ctx.respond(embed=embed, content="<@&937389035343712327>")
 
 
 
-    @commands.command(help="🤫")
-    async def sussy(self, ctx, member: discord.User=None):
+    @slash_command(help="🤫")
+    async def sussy(self, ctx: discord.ApplicationContext, member: discord.User=None):
         if member is None:
             member = ctx.author
 
@@ -74,7 +78,7 @@ class Test(commands.Cog):
         output.putalpha(mask)
         output.save(f"./tmp/profile-output-{member.id}.png")
 
-        await ctx.reply(file = discord.File(f"./tmp/profile-output-{member.id}.png", filename=f"profile-output-{ctx.author.id}.png"), mention_author=False)
+        await ctx.respond(file = discord.File(f"./tmp/profile-output-{member.id}.png", filename=f"profile-output-{ctx.author.id}.png"))
 
 def setup(bot):
     bot.add_cog(Test(bot))

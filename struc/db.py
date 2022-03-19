@@ -34,55 +34,62 @@ conn = psycopg2.connect(
 )
 
 def fetch(sql, binds=None):
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    if binds is None:
-        cur.execute(sql)
-    else:
-        cur.execute(sql, binds)
-    fetch = cur.fetchone()
+        if binds is None:
+            cur.execute(sql)
+        else:
+            cur.execute(sql, binds)
+        fetch = cur.fetchone()
 
-    cur.close()
-    #conn.close()
-    
-    if fetch is not None:
-        return fetch[0]
-    else:
-        return fetch
+        cur.close()
+        
+        if fetch is not None:
+            return fetch[0]
+        else:
+            return fetch
+    except Exception as e:
+        print(e)
 
 def fetchall(sql, binds=None):
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    if binds is None:
-        cur.execute(sql)
-    else:
-        cur.execute(sql, binds)
+        if binds is None:
+            cur.execute(sql)
+        else:
+            cur.execute(sql, binds)
 
-    fetch = cur.fetchall()
+        fetch = cur.fetchall()
 
-    cur.close()
-    #conn.close()
+        cur.close()
 
-    return fetch
-
+        return fetch
+    except Exception as e:
+        print(e)
 
 def modify(sql, binds=None):
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    if binds is None:
-        cur.execute(sql)
-    else:
-        cur.execute(sql, binds)
-    conn.commit()
+        if binds is None:
+            cur.execute(sql)
+        else:
+            cur.execute(sql, binds)
+        conn.commit()
 
-    cur.close()
-    #conn.close()
+        cur.close()
+    except Exception as e:
+        print(e)
 
 def create(table, columns):
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    cur.execute(f"CREATE TABLE IF NOT EXISTS {table}({columns});")
-    conn.commit()
+        cur.execute(f"CREATE TABLE IF NOT EXISTS {table}({columns});")
+        conn.commit()
 
-    cur.close()
-    #conn.close()
+        cur.close()
+    except Exception as e:
+        print(e)

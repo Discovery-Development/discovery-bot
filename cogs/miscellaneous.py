@@ -5,6 +5,10 @@ import main
 from discord.ext import commands 
 from struc import colors
 from datetime import datetime
+from discord.commands import (
+    slash_command,
+    Option
+)
 
 class Miscellaneous(commands.Cog):
     """
@@ -13,24 +17,27 @@ class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(help="Announces something for you in an embed message.")
-    async def announce(self, ctx, *, content):
+    @slash_command()
+    async def announce(self, ctx: discord.ApplicationContext, content: Option(str, "Your announcement")):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
         announce_embed = discord.Embed(description=f"{content}", timestamp=datetime.now(), color=discord.Color(0xF37F7F))
         announce_embed.set_footer(icon_url=f"{ctx.author.avatar.url}", text=f"Announcement from {ctx.author}")
-        await ctx.reply(embed=announce_embed, mention_author=False)
 
-    @commands.command(help="Gets the bot's latency.")
-    async def ping(self, ctx):
+        await ctx.respond(embed=announce_embed)
+
+    @slash_command()
+    async def ping(self, ctx: discord.ApplicationContext):
         ping_embed = discord.Embed(title=f"🏓 Pong", description=f"**Ping:** {round(self.bot.latency*1000)}ms", color=discord.Color(0xF37F7F))
-        await ctx.reply("Here ya go!" ,embed=ping_embed, mention_author=False)
+        await ctx.respond("Here ya go!" ,embed=ping_embed)
         
-    @commands.command(help="Gets the bot's version.")
+    @slash_command()
     async def version(self, ctx):
         version_embed = discord.Embed(title="Version", description=f"You are currently using version **{self.bot.version}**.", color=discord.Color(0xF37F7F))
-        await ctx.reply(embed=version_embed, mention_author=False)
+        await ctx.respond(embed=version_embed)
 
-    @commands.command(help="Sends someone's avatar.")
-    async def pfp(self, ctx, target: discord.User=None):
+    @slash_command()
+    async def pfp(self, ctx: discord.ApplicationContext, target: Option(discord.User, "The target", required=None)):
         if target is None:
             target = ctx.author
             pfp_title = "Your avatar"
@@ -40,11 +47,11 @@ class Miscellaneous(commands.Cog):
         pfp_embed = discord.Embed(title=pfp_title, url=target.avatar.url)
         pfp_embed.set_image(url=target.avatar.url)
 
-        await ctx.reply(embed=pfp_embed, mention_author=False)
+        await ctx.respond(embed=pfp_embed)
 
 
-    @commands.command(help="Sends some information about someone.")
-    async def userinfo(self, ctx, member: discord.Member=None):
+    @slash_command()
+    async def userinfo(self, ctx: discord.ApplicationContext, member: Option(discord.Member, "The target", required=False)):
         if not member:
             member = ctx.author
 
@@ -84,10 +91,10 @@ class Miscellaneous(commands.Cog):
         userinfo_embed.add_field(name="Status", value=f"{str(member.status).capitalize()}", inline=True)
         userinfo_embed.add_field(name="Activity", value=f"{member_activity_type}: {str(member_activity).capitalize()}", inline=True)
 
-        await ctx.reply(embed=userinfo_embed, mention_author=False)
+        await ctx.respond(embed=userinfo_embed)
 
-    @commands.command()
-    async def serverinfo(self, ctx):
+    @slash_command()
+    async def serverinfo(self, ctx: discord.ApplicationContext):
         server_info_embed = discord.Embed(title=ctx.guild.name, color=colors.default)
         if ctx.guild.icon is not None:
             server_info_embed.set_thumbnail(url=ctx.guild.icon.url)
@@ -98,7 +105,7 @@ class Miscellaneous(commands.Cog):
         server_info_embed.add_field(name="Boosts", value=f"Boost Level: {ctx.guild.premium_tier}\nBoosts: {ctx.guild.premium_subscription_count}", inline=False)
         server_info_embed.add_field(name="Roles", value=f"Roles: {len(ctx.guild.roles)}", inline=False)
 
-        await ctx.reply(embed=server_info_embed, mention_author=False)
+        await ctx.respond(embed=server_info_embed)
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))

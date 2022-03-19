@@ -5,7 +5,10 @@ import discord
 from discord.commands import slash_command
 from discord.ext import commands
 from discord.ui import View, Button
-
+from discord.commands import (
+    slash_command,
+    Option
+)
 
 class GiveawaySystem(commands.Cog):
     def __init__(self, bot):
@@ -15,6 +18,9 @@ class GiveawaySystem(commands.Cog):
     @slash_command(description="Create a giveaway")
     @commands.has_permissions(manage_messages=True)
     async def giveaway(self, ctx: discord.ApplicationContext, hours: int, prize: str, description: str = None):
+        if not ctx.author.guild_permissions.manage_channels:
+            raise commands.MissingPermissions(["ManageChannels"])
+
         embed = discord.Embed(
             title="Giveaway",
             description=description if description else None,
