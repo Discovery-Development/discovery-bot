@@ -8,6 +8,6 @@
 <h4 align="center">Tickets, Moderation, Suggestions, Image manipulation and much more.</h4>
 
 <h2 align="center">Overview</h2>
-<p>The Discovery Discord Bot is a closed-source Discord Bot. It has features like a Ticket System, Custom Guild Settings, a Warning System and much more! It is currently still in a very early phase of development, which means it is a little unstable but the features should make up for that.</p>
+<p>The Discovery Discord Bot is an open-source Discord Bot. It has features like a Ticket System, Custom Guild Settings, a Warning System and much more! It is currently still in a very early phase of development, which means it is a little unstable but the features should make up for that.</p>
 
 (The README page is still in progress, we're at least trying to have one.)

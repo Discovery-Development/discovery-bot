@@ -1,7 +1,7 @@
 import discord
 import asyncio
 from discord.ext import commands
-from struc import db
+from struc import db, colors
 from discord.commands import (
     slash_command,
     Option,
@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
 
     warns = SlashCommandGroup("warns", "Warning system")
 
-    @slash_command()
+    @slash_command(guild_ids=[943824727242321980])
     async def warn(self, ctx: discord.ApplicationContext, user: Option(discord.Member, "The member to warn"), reason: Option(str, "Reason for warn", required=False, default="No reason specified.")):
         if not ctx.author.guild_permissions.moderate_members:
             raise commands.MissingPermissions(["ModerateMembers"])
@@ -67,7 +67,7 @@ class Moderation(commands.Cog):
         await ctx.respond(f"**`User`**: {user.mention}\n**`Reason`**: {reason}")
 
 
-    @warns.command()
+    @warns.command(guild_ids=[943824727242321980])
     async def list(self, ctx: discord.ApplicationContext):
         if not ctx.author.guild_permissions.moderate_members:
             raise commands.MissingPermissions(["ModerateMembers"])
@@ -75,10 +75,23 @@ class Moderation(commands.Cog):
         fetch = db.fetchall("SELECT * FROM warnings WHERE guild_id = %s;", (ctx.guild.id,))
         warning_count = len(db.fetchall("SELECT guild_id FROM warnings WHERE guild_id = %s;", (ctx.guild.id,)))
 
-        fetch_embed = discord.Embed(title=f"Warnings in {ctx.guild.name}", color=discord.Color(0xF37F7F), description="")
-        fetch_embed.description = f"**Total count:** {warning_count}\n"
-        for warning in fetch:
-            fetch_embed.description += f"User: <@{warning[1]}>\nModerator: <@{warning[2]}>\nID: {warning[4]}\nReason: ```{warning[3]}```\n"
+        fetch_embed = discord.Embed(title=f"Warnings in {ctx.guild.name}", color=colors.default, description="")
+        fetch_embed.description = f"**Total warns in this server:** {warning_count}\n"
+
+        users = db.fetchall("SELECT user_id FROM warnings WHERE guild_id = %s;", (ctx.guild.id,))
+
+        users = list(dict.fromkeys(users))
+
+        for user_id in users:
+            user_warns = db.fetchall("SELECT * FROM warnings WHERE guild_id = %s AND user_id = %s;", (ctx.guild.id, user_id))
+            user = await self.bot.fetch_user(user_id[0])
+            user_warn_text = ""
+            for warning in user_warns:
+                user_warn_text += f"\nModerator: <@{warning[2]}>\nID: {warning[4]}\nReason: ```{warning[3]}```\n"
+            fetch_embed.add_field(name=f"Warnings of {user.name}", value=f"Total: {len(user_warns)}{user_warn_text}", inline=False)
+
+        #for warning in fetch:
+        #    fetch_embed.description += f"User: <@{warning[1]}>\nModerator: <@{warning[2]}>\nID: {warning[4]}\nReason: ```{warning[3]}```\n"
 
         if fetch is None or fetch == () or fetch == []:
             fetch_embed.description = "No users have been warned!"
