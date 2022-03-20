@@ -2,6 +2,7 @@ import hikari
 import lightbulb
 from dotenv import load_dotenv
 import os
+from struc import colors_cli
 
 load_dotenv()
 
@@ -11,21 +12,7 @@ bot = lightbulb.BotApp(token=token, default_enabled_guilds=(943824727242321980),
 
 @bot.listen(hikari.StartedEvent)
 async def on_started(event: hikari.StartingEvent) -> None:
-    print(f"Successfully connected to Discord API.")
-
-@bot.command
-@lightbulb.command("ping", "Says pong")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def ping(ctx: lightbulb.ApplicationContext) -> None:
-    await ctx.respond("Pong!")
-
-@bot.command
-@lightbulb.option("message", "Message to repeat", type=str)
-@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.KICK_MEMBERS))
-@lightbulb.command("say", "Repeats your message")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def say(ctx: lightbulb.ApplicationContext) -> None:
-    await ctx.respond(ctx.options.message)
+    print(f"{colors_cli.SUCCESS}Successfully connected to Discord API.{colors_cli.RESET}")
 
 bot.load_extensions_from("./extensions", must_exist=True, recursive=True)
 

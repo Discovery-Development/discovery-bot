@@ -3,3 +3,7 @@ hikari[speedups]
 uvloop
 hikari-lightbulb
 psycopg2-binary
+aiohttp
+cchardet
+aiodns
+aiohttp[speedups]
