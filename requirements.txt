@@ -7,3 +7,4 @@ aiohttp
 cchardet
 aiodns
 aiohttp[speedups]
+asyncio

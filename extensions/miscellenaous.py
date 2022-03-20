@@ -1,5 +1,4 @@
 import lightbulb
-from lightbulb import commands
 import hikari
 from struc import colors
 import aiohttp
@@ -50,9 +49,7 @@ async def userinfo(ctx: lightbulb.ApplicationContext):
     if plugin.bot.cache.get_presence(ctx.guild_id, member.id):
         member_activity: hikari.Activity = plugin.bot.cache.get_presence(ctx.guild_id, member.id)
     else:
-        member_activity = ""
-    #membery_activity_type = member_activity.type or "Doing"
-    #member_activity = member_activity.name or "Nothing"
+        member_activity = None
 
     created_at = member.created_at.strftime("%b %d, %Y, %H:%M")
     joined_at = member.joined_at.strftime("%b %d, %Y, %H:%M")
@@ -70,11 +67,13 @@ async def userinfo(ctx: lightbulb.ApplicationContext):
         if role.id != ctx.guild_id:
             member_roles += f" <@&{role.id}>"
 
-    userinfo_embed.add_field(name="ID", value=f"{member.id}")
+    userinfo_embed.add_field(name="ID", value=f"{member.id}", inline=True)
     userinfo_embed.add_field(name="Created account on", value=f"{created_at}", inline=True)
     userinfo_embed.add_field(name=f"Joined {ctx.get_guild().name} on", value=f"{joined_at}", inline=True)
     userinfo_embed.add_field(name="Roles", value=f"{member_roles}", inline=True)
-    userinfo_embed.add_field(name="Status", value=f"{str(member_activity.visible_status).capitalize()}")
+
+    if member_activity:
+        userinfo_embed.add_field(name="Status", value=f"{str(member_activity.visible_status).capitalize()}", inline=True)
 
     await ctx.respond(embed=userinfo_embed)
 
@@ -90,19 +89,37 @@ async def serverinfo(ctx: lightbulb.ApplicationContext):
     humans = await plugin.bot.rest.fetch_members(ctx.get_guild()).filter(("is_bot", True)).count()
     bots = await plugin.bot.rest.fetch_members(ctx.get_guild()).filter(("is_bot", False)).count()
 
-    voice_channels = (await plugin.bot.rest.fetch_guild_channels(ctx.get_guild())).filter("type", hikari.ChannelType.GUILD_VOICE).count()
-    text_channels = (await plugin.bot.rest.fetch_guild_channels(ctx.get_guild())).filter("type", hikari.ChannelType.GUILD_TEXT).count()
-    categories = (await plugin.bot.rest.fetch_guild_channels(ctx.get_guild())).filter("type", hikari.ChannelType.GUILD_CATEGORY).count()
+    channels = await plugin.bot.rest.fetch_guild_channels(ctx.guild_id)
+    voice_channels = 0
+    text_channels = 0
+    categories = 0
 
-    non_animated_emojis = (await plugin.bot.rest.fetch_guild_emojis(ctx.get_guild())).filter(("is_animated", False)).count()
-    animated_emojis = (await plugin.bot.rest.fetch_guild_emojis(ctx.get_guild())).filter(("is_animated", True)).count()
+    for channel in channels:
+        if channel.type == hikari.ChannelType.GUILD_VOICE:
+            voice_channels += 1
+        elif channel.type == hikari.ChannelType.GUILD_TEXT:
+            text_channels += 1
+        elif channel.type == hikari.ChannelType.GUILD_CATEGORY:
+            categories += 1
+
+    emojis = await plugin.bot.rest.fetch_guild_emojis(ctx.guild_id)
+    regular_emojis = 0
+    animated_emojis = 0
+
+    for emoji in emojis:
+        if emoji.is_animated is False:
+            regular_emojis += 1
+        elif emoji.is_animated is True:
+            animated_emojis += 1
 
     server_info_embed.description = f"**ID**: {ctx.get_guild().id}\n**Owner**: <@{ctx.get_guild().owner_id}>\n**Creation Time**: `{ctx.get_guild().created_at.strftime('%d-%m-%Y--%H-%M-%S')}`"
     server_info_embed.add_field(name="Members", value=f"Humans: {humans}\nBots: {bots}", inline=False)
     server_info_embed.add_field(name="Channels", value=f"🔊 Voice channels: {voice_channels}\n💬 Text Channels: {text_channels}\nCategories: {categories}", inline=False)
-    server_info_embed.add_field(name="Emojis", value=f"Regular: {non_animated_emojis}\nAnimated: {animated_emojis}", inline=False)
+    server_info_embed.add_field(name="Emojis", value=f"Regular: {regular_emojis}\nAnimated: {animated_emojis}", inline=False)
     server_info_embed.add_field(name="Boosts", value=f"Boost Level: {ctx.get_guild().premium_tier}\nBoosts: {ctx.get_guild().premium_subscription_count}", inline=False)
     server_info_embed.add_field(name="Roles", value=f"Roles: {len(await ctx.get_guild().fetch_roles())}", inline=False)
+
+    await ctx.respond(embed=server_info_embed)
 
 def load(bot):
     bot.add_plugin(plugin)

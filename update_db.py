@@ -135,7 +135,6 @@ def update_db():
 
     db.modify("ALTER TABLE reaction_roles ADD COLUMN IF NOT EXISTS message_id BIGINT")
 
-
     db.modify("ALTER TABLE reaction_roles ADD COLUMN IF NOT EXISTS role_id BIGINT")
 
     db.modify("ALTER TABLE reaction_roles ADD COLUMN IF NOT EXISTS emoji VARCHAR")
