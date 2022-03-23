@@ -1,0 +1,17 @@
+{
+  "name": "discovery-bot",
+  "version": "0.0.1",
+  "description": "A powerful, multi-functional, general-purpose Discord Bot.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pickles#3524",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "eris": "^0.16.1",
+    "fs": "^0.0.1-security",
+    "pg": "^8.7.3"
+  }
+}
