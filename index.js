@@ -1,11 +1,9 @@
 const Eris = require("eris");
-const { colors } = require("./Struc/colors");
+const db = require("./struc/db");
+const { colors } = require("./struc/colors");
 require("dotenv").config();
 const fs = require("fs");
 
-// TODO: yes
-
-// Replace TOKEN with your bot account's token
 const bot = new Eris(process.env.TOKEN, {
   getAllUsers: true,
   intents: [
@@ -26,7 +24,7 @@ bot.commands = new Eris.Collection();
 
 bot.on("ready", async () => {
   bot.editStatus("online", { name: "JS Version", type: 0 });
-  
+
   const selfUser = bot.getSelf(); // Make promise to get the Bot's ExtendedUser
   selfUser.then((user) => {
     console.log(

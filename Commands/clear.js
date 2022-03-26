@@ -1,4 +1,4 @@
-const { colors } = require("../Struc/colors");
+const { colors } = require("../struc/colors");
 
 // TODO: Permissions stuff
 

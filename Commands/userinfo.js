@@ -1,4 +1,4 @@
-const { colors } = require("../Struc/colors");
+const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "userinfo",
