@@ -57,8 +57,9 @@ class Miscellaneous(commands.Cog):
 
         member_roles = ""
         member_nickname = member.nick
-        member_activity = member.activity.name
-        member_activity_type = str(member.activity.type).split('.')[-1].title()
+        if member.activity:
+            member_activity = member.activity.name
+            member_activity_type = str(member.activity.type).split('.')[-1].title()
 
         created_at = member.created_at.strftime("%b %d, %Y, %H:%M")
         joined_at = member.joined_at.strftime("%b %d, %Y, %H:%M")

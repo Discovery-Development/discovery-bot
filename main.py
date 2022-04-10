@@ -1,58 +1,25 @@
-
-from abc import ABC
 from dotenv import load_dotenv
 import discord
 import os
-from init import update_db
+from struc import colored
 from discord.ext import commands
-from struc import get_guild_values
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import psycopg2
 
 load_dotenv()
 
 intents = discord.Intents.all()
 
+bot = commands.Bot(case_insensitive=True, intents=intents)
 
-class Bot(commands.Bot, ABC):
-    def __init__(self):
-        super().__init__(
-            command_prefix=get_guild_values.prefix,
-            case_insensitive=True,
-            intents=discord.Intents.all()
-        )
-        self.ready = False
-        self.scheduler = AsyncIOScheduler(timezone="utc")
-        self.persistent_views_added = False
+for ext in os.listdir("./cogs"):
+        if ext.endswith(".py"):
+            bot.load_extension(f"cogs.{ext[:-3]}")
+            print(f"Extension {ext[:-3]} was loaded.")
+print(f"{colored.SUCCESS}All extensions were loaded.{colored.RESET}")
 
-    def setup(self):
-        for ext in os.listdir("./cogs"):
-            if ext.endswith(".py"):
-                bot.load_extension(f"cogs.{ext[:-3]}")
-                print(f"Extension {ext[:-3]} was loaded.")
-        print("Setup completed.")
-
-    def run(self):
-        print("Running setup...")
-        self.setup()
-        print("Starting bot.")
-        #update_db() Only uncomment if your code changes the DB
-        if os.getenv("TOKEN"):
-            super().run(str(os.getenv("TOKEN")), reconnect=True)
-        super().run(str(os.environ.get("TOKEN")), reconnect=True)
-
-    async def on_ready(self):
-        print("Syncing commands...")
-        await bot.sync_commands(force=True)
-        print("Successfully synced commands.")
-
-        if not self.ready:
-            self.scheduler.start()
-            self.ready = True
-            print("Bot is ready.")
-        else:
-            print("Bot reconnected.")
-
-
-bot = Bot()
-bot.run()
+try:
+    if os.getenv("TOKEN"):
+        bot.run(os.getenv("TOKEN"))
+    elif os.environ.get("TOKEN"):
+        bot.run(os.environ.get("TOKEN"))
+except RuntimeError:
+    print(f"\n{colored.SUCCESS}Disconnected from Discord API.{colored.RESET}")

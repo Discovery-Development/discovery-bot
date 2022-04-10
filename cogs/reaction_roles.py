@@ -10,10 +10,12 @@ class ReactionRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @slash_command()
-    async def set_reaction_role(self, ctx: discord.ApplicationContext, message_id: Option(int, "The message's ID"), role: Option(discord.Role, "The role to be given on reaction"), emoji: Option(str, "The emoji that is to be reacted with")):
+    @slash_command(guild_ids=[943824727242321980])
+    async def set_reaction_role(self, ctx: discord.ApplicationContext, message_id: Option(str, "The message's ID"), role: Option(discord.Role, "The role to be given on reaction"), emoji: Option(str, "The emoji that is to be reacted with")):
         if not ctx.author.guild_permissions.administrator:
             raise commands.MissingPermissions(["Administrator"])
+
+        message_id = int(message_id)
 
         exists = db.fetch("SELECT * FROM reaction_roles WHERE message_id = %s AND emoji = %s;", (message_id, emoji))
 
@@ -50,10 +52,12 @@ class ReactionRoles(commands.Cog):
 
         await ctx.respond(embed=fetch_embed)
 
-    @slash_command()
-    async def remove_reaction_role(self, ctx: discord.ApplicationContext, message_id: Option(int, "The message's ID"), emoji: Option(str, "The emoji reaction which is to be removed")):
+    @slash_command(guild_ids=[943824727242321980])
+    async def remove_reaction_role(self, ctx: discord.ApplicationContext, message_id: Option(str, "The message's ID"), emoji: Option(str, "The emoji reaction which is to be removed")):
         if not ctx.author.guild_permissions.administrator:
             raise commands.MissingPermissions(["Administrator"])
+
+        message_id = int(message_id)
 
         exists = db.fetch("SELECT * FROM reaction_roles WHERE message_id = %s AND emoji = %s;", (message_id, emoji))
 

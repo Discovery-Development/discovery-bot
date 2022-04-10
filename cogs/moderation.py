@@ -18,9 +18,11 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @slash_command()
-    async def purge(self, ctx: discord.ApplicationContext, limit: Option(int, "The amount of messages to delete")):
+    async def purge(self, ctx: discord.ApplicationContext, limit: Option(str, "The amount of messages to delete")):
         if not ctx.author.guild_permissions.manage_channels:
             raise commands.MissingPermissions(["ManageChannels"])
+
+        limit = int(limit)
 
         if limit > 100 or limit < 1:
             await ctx.respond("The minimium value is **`1`** and the maximum **`200`**.")
@@ -100,9 +102,11 @@ class Moderation(commands.Cog):
 
 
     @warns.command()
-    async def remove(self, ctx: discord.ApplicationContext, warn_id: Option(int, "The ID of the warn")):
+    async def remove(self, ctx: discord.ApplicationContext, warn_id: Option(str, "The ID of the warn")):
         if not ctx.author.guild_permissions.moderate_members:
             raise commands.MissingPermissions(["ModerateMembers"])
+
+        warn_id = int(warn_id)
 
         if warn_id is None:
             await ctx.respond("Please specify the warning ID.\nYou can find this ID by using `warns list`")
