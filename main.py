@@ -22,4 +22,4 @@ try:
     elif os.environ.get("TOKEN"):
         bot.run(os.environ.get("TOKEN"))
 except RuntimeError:
-    print(f"\n{colored.SUCCESS}Disconnected from Discord API.{colored.RESET}")
+    print(f"\n{colored.SUCCESS}Successfully disconnected from Discord API.{colored.RESET}")
