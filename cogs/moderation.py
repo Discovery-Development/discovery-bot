@@ -41,7 +41,7 @@ class Moderation(commands.Cog):
         m = await ctx.respond(f"Successfully deleted {text}. This message will be deleted in 5 seconds.")
         await asyncio.sleep(5)
         try:
-            await m.delete()
+            await m.message.delete()
         except discord.HTTPException:
             pass
 

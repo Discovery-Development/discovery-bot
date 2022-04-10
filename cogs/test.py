@@ -21,7 +21,7 @@ class Test(commands.Cog):
     
 
     @slash_command(help="Apply to join our team.")
-    async def team(self, ctx):
+    async def team(self, ctx: discord.ApplicationContext):
         await ctx.message.delete()
         embedd = discord.Embed(title="Be a part of our team", colour=discord.Colour(
             0xf79800), timestamp=datetime.now())
