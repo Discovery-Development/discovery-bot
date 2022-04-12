@@ -16,18 +16,11 @@ module.exports = {
   ],
   description: "Clears an amount of messages.",
   async run(bot, interaction, Eris) {
-    return interaction.channel
-      .purge({ limit: interaction.data.options[0].value })
-      .then((amount) => {
-        return interaction.createMessage(
-          `Successfully deleted ${amount} messages.`
-        );
-      })
-      .catch((err) => {
+    return interaction.channel.purge({ limit: interaction.data.options[0].value }).then((amount) => {
+        return interaction.createMessage(`Successfully deleted ${amount} messages.`);
+      }).catch((err) => {
         console.log(err);
-        return interaction.createMessage(
-            {content: `An unkown error occured. Please report this error in the support server! Error \`\`\`${err}\`\`\``, flags: 64}
-        );
+        return interaction.createMessage({content: `An unkown error occured. Please report this error in the support server! Error \`\`\`${err}\`\`\``, flags: 64});
       });
   },
 };

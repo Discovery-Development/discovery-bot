@@ -44,9 +44,7 @@ module.exports = {
       */
       case "list":
         await interaction.createMessage("Calculating...");
-        fetch = await db.fetch("SELECT * FROM warnings WHERE guild_id = $1;", [
-          interaction.channel.guild.id,
-        ]);
+        fetch = await db.fetch("SELECT * FROM warnings WHERE guild_id = $1;", [interaction.channel.guild.id,]);
 
         list_embed = {
           title: "Warnings in this server",
@@ -55,10 +53,7 @@ module.exports = {
           fields: [],
         };
 
-        let warned_users = await db.fetch(
-          "SELECT user_id FROM warnings WHERE guild_id = $1;",
-          [interaction.channel.guild.id]
-        );
+        let warned_users = await db.fetch("SELECT user_id FROM warnings WHERE guild_id = $1;", [interaction.channel.guild.id]);
 
         // Remove all duplicates
         const seen = new Set();
@@ -71,10 +66,7 @@ module.exports = {
         if (fetch !== undefined) {
           for (let user_id of warned_users) {
             user_id = user_id.user_id;
-            user_warns = await db.fetch(
-              "SELECT * FROM warnings WHERE user_id = $1 AND guild_id = $2;",
-              [user_id, interaction.channel.guild.id]
-            );
+            user_warns = await db.fetch("SELECT * FROM warnings WHERE user_id = $1 AND guild_id = $2;", [user_id, interaction.channel.guild.id]);
             user = await bot.getRESTUser(user_id);
             let user_warn_text = "";
             for (const warning of user_warns) {
@@ -96,34 +88,18 @@ module.exports = {
       Remove command
       */
       case "remove":
-        await db.modify(
-          "DELETE FROM warnings WHERE guild_id = $1 AND id = $2;",
-          [
-            interaction.channel.guild.id,
-            interaction.data.options[0].options[0].value,
-          ]
-        );
+        await db.modify("DELETE FROM warnings WHERE guild_id = $1 AND id = $2;", [interaction.channel.guild.id, interaction.data.options[0].options[0].value,]);
 
-        await interaction.createMessage(
-          `Successfully removed warning ${interaction.data.options[0].options[0].value}`
-        );
+        await interaction.createMessage(`Successfully removed warning ${interaction.data.options[0].options[0].value}`);
         break;
       /*
       Reset command
       */
       case "reset":
-        await db.modify(
-          "DELETE FROM warnings WHERE user_id = $1 AND guild_id = $2;",
-          [
-            interaction.data.options[0].options[0].value,
-            interaction.channel.guild.id,
-          ]
-        );
+        await db.modify("DELETE FROM warnings WHERE user_id = $1 AND guild_id = $2;", [interaction.data.options[0].options[0].value, interaction.channel.guild.id]);
 
-        await interaction.createMessage(
-          `Successfully removed all warnings of <@${interaction.data.options[0].options[0].value}>.`
-        );
+        await interaction.createMessage(`Successfully removed all warnings of <@${interaction.data.options[0].options[0].value}>.`);
         break;
     }
-  },
+  }
 };

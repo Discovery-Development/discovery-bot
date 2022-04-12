@@ -13,12 +13,13 @@ const pool = new Pool({
 });
 
 async function fetch(sql, binds = undefined) { // Will return an array of dictionaries which contain the requested data
+  let returned_fetch;
   if (binds === undefined) {
-    fetch = await pool.query(sql);
+    returned_fetch = await pool.query(sql);
   } else if (binds !== undefined) {
-    fetch = await pool.query(sql, binds);
+    returned_fetch = await pool.query(sql, binds);
   }
-  return fetch.rows;
+  return returned_fetch.rows;
 }
 
 async function modify(sql, binds = undefined) {

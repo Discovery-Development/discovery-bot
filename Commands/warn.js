@@ -20,9 +20,7 @@ module.exports = {
   description: "Warns a member.",
   async run(bot, interaction, Eris) {
     await interaction.createMessage("Fetching member...");
-    let prev_warn_id = await db.fetch(
-      "SELECT id FROM warnings ORDER BY id DESC LIMIT 1;"
-    );
+    let prev_warn_id = await db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;");
 
     if (prev_warn_id.length === 0) {
       prev_warn_id = [{ id: "-1" }];
@@ -45,8 +43,6 @@ module.exports = {
       reason,
       next_warn_id,
     ]);
-    await interaction.createMessage(
-      `Successfully warned <@${interaction.data.options[0].value}>! Reason: \`\`\`${reason}\`\`\``
-    );
-  },
+    await interaction.createMessage(`Successfully warned <@${interaction.data.options[0].value}>! Reason: \`\`\`${reason}\`\`\``);
+  }
 };

@@ -10,11 +10,7 @@ module.exports = {
     const after = new Date().getTime();
     const ping = after - before;
 
-    embed = {
-      title: "🏓 Pong!",
-      description: `Shard Latency: **${shard.latency}**ms.\nAPI Latency: **${ping}**ms.`,
-      color: colors.default,
-    };
+    embed = {title: "🏓 Pong!", description: `Shard Latency: **${shard.latency}**ms.\nAPI Latency: **${ping}**ms.`, color: colors.default,};
 
     await interaction.editOriginalMessage({ content: "", embed: embed });
   },

@@ -18,7 +18,7 @@ const bot = new Eris(process.env.TOKEN, {
 });
 
 bot.commands = new Eris.Collection();
-["CommandHandler"].forEach((handler) => {
+["commandHandler"].forEach((handler) => {
   require(`./Handlers/${handler}`)(bot, Eris);
 });
 
@@ -50,10 +50,6 @@ bot.on("ready", async () => {
 
 bot.on("error", (err) => {
   console.error(err);
-});
-
-bot.on("messageCreate", (message) => {
-  if (message.author.bot) return;
 });
 
 bot.on("interactionCreate", async (interaction) => {
