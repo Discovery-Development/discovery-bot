@@ -43,6 +43,7 @@ module.exports = {
       reason,
       next_warn_id,
     ]);
-    await interaction.createMessage(`Successfully warned <@${interaction.data.options[0].value}>! Reason: \`\`\`${reason}\`\`\``);
+    
+    await interaction.editOriginalMessage({ content: `Successfully warned <@${interaction.data.options[0].value}>! Reason: \`\`\`${reason}\`\`\`` })
   }
 };

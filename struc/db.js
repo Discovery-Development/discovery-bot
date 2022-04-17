@@ -12,7 +12,12 @@ const pool = new Pool({
   idleTimeoutMillis: 0,
 });
 
-async function fetch(sql, binds = undefined) { // Will return an array of dictionaries which contain the requested data
+/**
+  Returns an Array of dictionaries
+ * @param {string} sql - The SQL query to run.
+ * @param {Array} binds - The values to bind to the query.
+*/
+async function fetch(sql, binds = undefined) {
   let returned_fetch;
   if (binds === undefined) {
     returned_fetch = await pool.query(sql);
@@ -21,7 +26,10 @@ async function fetch(sql, binds = undefined) { // Will return an array of dictio
   }
   return returned_fetch.rows;
 }
-
+/**
+ * @param  {string} sql - The SQL query to run.
+ * @param  {Array<Object>} binds - The values to bind to the query.
+ */
 async function modify(sql, binds = undefined) {
   await pool.query("BEGIN;");
   if (binds === undefined) {
@@ -32,7 +40,11 @@ async function modify(sql, binds = undefined) {
 
   await pool.query("COMMIT;");
 }
-
+/**
+ * 
+ * @param {string} table - The table to create.
+ * @param {string} columns - The columns to create under the table. 
+ */
 async function create(table, columns) {
   await pool.query("BEGIN;");
   await pool.query(`CREATE TABLE IF NOT EXISTS ${table}(${columns});`);
