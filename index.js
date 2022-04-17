@@ -63,6 +63,9 @@ bot.on("interactionCreate", async (interaction) => {
 });
 
 bot.on("messageReactionAdd", async (message, emoji, reactor) => {
+  if (emoji.id !== null) {
+    emoji.name = `<:${emoji.name}:${emoji.id}>`;
+  }
   reaction_role = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [message.id, emoji.name]);
 
   if (reaction_role.length > 0) {
@@ -80,6 +83,9 @@ bot.on("messageReactionAdd", async (message, emoji, reactor) => {
 });
 
 bot.on("messageReactionRemove", async (message, emoji, userID) => {
+  if (emoji.id !== null) {
+    emoji.name = `<:${emoji.name}:${emoji.id}>`;
+  }
   reaction_role = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [message.id, emoji.name]);
 
   if (reaction_role.length > 0) {
