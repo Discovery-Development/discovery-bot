@@ -2,6 +2,7 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "serverinfo",
+  dm_permission: false,
   description: "Returns information about the server.",
   async run(bot, interaction, Eris) {
     let members = {

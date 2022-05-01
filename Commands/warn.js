@@ -3,6 +3,7 @@ const db = require("../struc/db");
 
 module.exports = {
   name: "warn",
+  dm_permission: false,
   options: [
     {
       name: "member",

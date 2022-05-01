@@ -5,6 +5,7 @@ const db = require("../struc/db")
 
 module.exports = {
   name: "reactions",
+  dm_permission: false,
   options: [
     {
       type: 1,

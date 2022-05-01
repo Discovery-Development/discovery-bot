@@ -2,6 +2,7 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "ping",
+  dm_permission: false,
   description: "Says pong.",
   async run(bot, interaction, Eris) {
     shard = interaction.channel.guild.shard;

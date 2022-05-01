@@ -4,6 +4,7 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "clear",
+  dm_permission: false,
   options: [
     {
       name: "limit",

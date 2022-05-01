@@ -2,6 +2,7 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "userinfo",
+  dm_permission: false,
   options: [
     {
       name: "member",

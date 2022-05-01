@@ -1,5 +1,6 @@
 module.exports = {
   name: "say",
+  dm_permission: false,
   options: [
     {
       name: "message",
