@@ -5,7 +5,7 @@ const db = require("../struc/db")
 
 module.exports = {
   name: "reactions",
-  dm_permission: false,
+  
   options: [
     {
       type: 1,
@@ -59,8 +59,6 @@ module.exports = {
   ],
   description: "Reaction role system",
   async run(bot, interaction, Eris) {
-    //await db.modify("DELETE FROM reaction_roles WHERE guild_id = $1", [interaction.channel.guild.id]);
-
     switch (interaction.data.options[0].name) {
       case "add":
         const exists = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.channel.guild.id]);
@@ -111,6 +109,8 @@ module.exports = {
         break;
       
       case "remove":
+        let msg;
+
         const exists_remove = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.data.options[0].options[1].value]);
 
         if (exists_remove.length === 0) {
@@ -120,7 +120,11 @@ module.exports = {
 
         db.modify("DELETE FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.data.options[0].options[1].value]);
 
-        msg = await bot.getMessage(interaction.channel.id, interaction.data.options[0].options[0].value);
+        try {
+          msg = await bot.getMessage(interaction.channel.id, interaction.data.options[0].options[0].value);
+        } catch(err) {
+          () => {};
+        }
 
         if (msg) {
           let emoji = interaction.data.options[0].options[1].value;
