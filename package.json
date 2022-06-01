@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.0",
-    "eris": "^0.16.1",
+    "eris": "github:abalabahaha/eris#dev",
     "fs": "^0.0.1-security",
     "pg": "^8.7.3"
   }

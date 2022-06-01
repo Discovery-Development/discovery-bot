@@ -2,26 +2,25 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "serverinfo",
-  dm_permission: false,
   description: "Returns information about the server.",
   async run(bot, interaction, Eris) {
     let members = {
-      real: interaction.channel.guild.members.filter((x) => !x.bot).length.toLocaleString(),
-      bot: interaction.channel.guild.members.filter((x) => x.bot).length.toLocaleString(),
+      real: interaction.channel.guild.members.filter((x) => !x.bot).length,
+      bot: interaction.channel.guild.members.filter((x) => x.bot).length,
     };
 
-    let roles = interaction.channel.guild.roles.size.toLocaleString();
+    let roles = interaction.channel.guild.roles.size;
     let creation_time = interaction.channel.guild.createdAt;
 
     let channels = {
-      text: interaction.channel.guild.channels.filter((x) => x.type === 0).length.toLocaleString(),
-      voice: interaction.channel.guild.channels.filter((x) => x.type === 2).length.toLocaleString(),
-      category: interaction.channel.guild.channels.filter((x) => x.type === 4).length.toLocaleString(),
+      text: interaction.channel.guild.channels.filter((x) => x.type === 0).length,
+      voice: interaction.channel.guild.channels.filter((x) => x.type === 2).length,
+      category: interaction.channel.guild.channels.filter((x) => x.type === 4).length,
     };
 
     let emojis = {
-      regular: interaction.channel.guild.emojis.filter((x) => !x.animated).length.toLocaleString(),
-      animated: interaction.channel.guild.emojis.filter((x) => x.animated).length.toLocaleString(),
+      regular: interaction.channel.guild.emojis.filter((x) => !x.animated).length,
+      animated: interaction.channel.guild.emojis.filter((x) => x.animated).length,
     };
 
     let icon;
@@ -32,7 +31,7 @@ module.exports = {
     const embed = {
       author: { name: interaction.channel.guild.name },
       color: colors.default,
-      description: `**ID**: \`${interaction.channel.guild.id}\`\n**Owner**: <@!${interaction.channel.guild.ownerID}>\n**Creation Time**: \`${new Date(creation_time).toLocaleString()}\``,
+      description: `**ID**: \`${interaction.channel.guild.id}\`\n**Owner**: <@!${interaction.channel.guild.ownerID}>\n**Creation Time**: \`${new Date(creation_time).toLocaleString("en-US", { timezone: "Europe/Berlin" })}\``,
       fields: [
         {
           name: "Members",

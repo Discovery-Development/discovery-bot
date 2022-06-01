@@ -1,10 +1,8 @@
 const Eris = require("eris");
 const db = require("./struc/db");
-const { colors } = require("./struc/colors");
 require("dotenv").config();
-const fs = require("fs");
 
-const bot = new Eris(process.env.TOKEN, {
+const bot = new Eris.Client(process.env.TOKEN, {
   getAllUsers: true,
   intents: [
     "guilds",
@@ -15,12 +13,13 @@ const bot = new Eris(process.env.TOKEN, {
     "guildPresences",
     "guildMessageReactions"
   ],
-  restMode: true,
+  restMode: true
 });
 
 bot.commands = new Map();
 ["commandHandler"].forEach((handler) => {
-  require(`./Handlers/${handler}`)(bot, Eris);
+  const handler_func = require(`./Handlers/${handler}`);
+  handler_func(bot);
 });
 
 bot.on("ready", async () => {
@@ -28,7 +27,7 @@ bot.on("ready", async () => {
 
   const selfUser = await bot.getSelf();
 
-  console.log(`Successfully connected to Discord API. Logged in as ${selfUser.username}#${selfUser.discriminator}\nActive on ${Object.keys(bot.guilds).length.toLocaleString()} servers.`);
+  console.log(`Successfully connected to Discord API. Logged in as ${selfUser.username}#${selfUser.discriminator}\nActive on ${Object.keys(bot.guilds).length} servers.`);
 
   const guildId = "943824727242321980";
 
@@ -45,13 +44,6 @@ bot.on("ready", async () => {
     console.log(`Created "${command.name}" application command.`);
   }
 });
-/*
-The error event doesn't seem to work.
-
-bot.on("error", (err) => {
-  console.error(err);
-});
-*/
 
 // Slash-command handler
 bot.on("interactionCreate", async (interaction) => {
@@ -102,5 +94,8 @@ bot.on("messageReactionRemove", async (message, emoji, userID) => {
   }
 });
 
-
 bot.connect();
+
+process.on("uncaughtException", (err) => {
+  console.log(`An uncaught exception has occurred: ${err}`);
+});

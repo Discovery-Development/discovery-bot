@@ -25,5 +25,6 @@ module.exports = {
     }
 
     await interaction.createMessage({ embed: say_embed });
+    throw new Error("sussy baka");
   },
 };

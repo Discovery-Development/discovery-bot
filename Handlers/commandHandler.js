@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-module.exports = (bot, Eris) => {
+module.exports = (bot) => {
   const command_files = fs.readdirSync("./Commands/").filter((f) => f.endsWith(".js"));
   for (const file of command_files) {
     const command = require(`../Commands/${file}`);

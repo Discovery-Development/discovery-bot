@@ -3,7 +3,6 @@ const db = require("../struc/db");
 
 module.exports = {
   name: "warn",
-  dm_permission: false,
   options: [
     {
       name: "member",
@@ -20,7 +19,6 @@ module.exports = {
   ],
   description: "Warns a member.",
   async run(bot, interaction, Eris) {
-    await interaction.createMessage("Fetching member...");
     let prev_warn_id = await db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;");
 
     if (prev_warn_id.length === 0) {

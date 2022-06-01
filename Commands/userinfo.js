@@ -2,7 +2,6 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "userinfo",
-  dm_permission: false,
   options: [
     {
       name: "member",
@@ -32,7 +31,7 @@ module.exports = {
       roles += ` <@&${role_id}>`;
     }
 
-    if (member.activities !== undefined) {
+    if (member.activities !== undefined && member.activities.length > 0) {
       activity = {
         name: member.activities[0].name,
         type: member.activities[0].type,

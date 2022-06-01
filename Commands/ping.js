@@ -2,8 +2,7 @@ const { colors } = require("../struc/colors");
 
 module.exports = {
   name: "ping",
-  dm_permission: false,
-  description: "Says pong.",
+  description: "Returns current API ping and shard ping.",
   async run(bot, interaction, Eris) {
     shard = interaction.channel.guild.shard;
     const before = new Date().getTime();
