@@ -1,5 +1,6 @@
-const { colors } = require("../struc/colors");
-const db = require("../struc/db");
+import colors = require("../struc/colors")
+import db = require("../struc/db")
+import Eris = require("eris")
 
 module.exports = {
   name: "warns",
@@ -37,27 +38,26 @@ module.exports = {
     },
   ],
   description: "The warning system.",
-  async run(bot, interaction, Eris) {
-    switch (interaction.data.options[0].name) {
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
+    switch ((interaction as any).data.options[0].name) {
       /*
       List command
       */
       case "list":
-        await interaction.createMessage("Calculating...");
-        fetch = await db.fetch("SELECT * FROM warnings WHERE guild_id = $1;", [interaction.channel.guild.id,]);
+        await interaction.createMessage("Fetching data, this may take a while...");
+        const fetch = await db.fetch("SELECT * FROM warnings WHERE guild_id = $1;", [(interaction as any).channel.guild.id,]);
 
-        list_embed = {
+        let list_embed = {
           title: "Warnings in this server",
           color: colors.default,
-          description: `Total warnings: ${fetch.length}`,
-          fields: [],
+          description: `Total warnings: ${fetch.length}`
         };
 
-        let warned_users = await db.fetch("SELECT user_id FROM warnings WHERE guild_id = $1;", [interaction.channel.guild.id]);
+        let warned_users = await db.fetch("SELECT user_id FROM warnings WHERE guild_id = $1;", [(interaction as any).channel.guild.id]);
 
         // Remove all duplicates
         const seen = new Set();
-        warned_users = warned_users.filter(el => {
+        warned_users = warned_users.filter((el: { user_id: any }) => {
           const duplicate = seen.has(el.user_id);
           seen.add(el.user_id);
           return !duplicate;
@@ -66,39 +66,39 @@ module.exports = {
         if (fetch !== undefined) {
           for (let user_id of warned_users) {
             user_id = user_id.user_id;
-            user_warns = await db.fetch("SELECT * FROM warnings WHERE user_id = $1 AND guild_id = $2;", [user_id, interaction.channel.guild.id]);
-            user = await bot.getRESTUser(user_id);
+            let user_warns = await db.fetch("SELECT * FROM warnings WHERE user_id = $1 AND guild_id = $2;", [user_id, (interaction as any).channel.guild.id]);
+            let user = await bot.getRESTUser(user_id);
             let user_warn_text = "";
             for (const warning of user_warns) {
               user_warn_text += `\nModerator: <@${warning.mod_id}>\nID: ${warning.id}\nReason: \`\`\`${warning.reason}\`\`\`\n`;
             }
-            list_embed.fields.push({
+            (list_embed as any).fields = {
               name: `Warnings of ${user.username}#${user.discriminator}`,
               value: `Total: ${user_warns.length}\n${user_warn_text}`,
               inline: false,
-            });
+          };
           }
         } else {
           list_embed.description = "No warnings in this server.";
         }
 
-        await interaction.editOriginalMessage({content: "", embed: list_embed});
+        await interaction.editOriginalMessage({content: "", embeds: [list_embed]});
         break;
       /*
       Remove command
       */
       case "remove":
-        await db.modify("DELETE FROM warnings WHERE guild_id = $1 AND id = $2;", [interaction.channel.guild.id, interaction.data.options[0].options[0].value,]);
+        await db.modify("DELETE FROM warnings WHERE guild_id = $1 AND id = $2;", [(interaction as any).channel.guild.id, (interaction as any).data.options[0].options[0].value,]);
 
-        await interaction.createMessage(`Successfully removed warning ${interaction.data.options[0].options[0].value}`);
+        await interaction.createMessage(`Successfully removed warning ${(interaction as any).data.options[0].options[0].value}`);
         break;
       /*
       Reset command
       */
       case "reset":
-        await db.modify("DELETE FROM warnings WHERE user_id = $1 AND guild_id = $2;", [interaction.data.options[0].options[0].value, interaction.channel.guild.id]);
+        await db.modify("DELETE FROM warnings WHERE user_id = $1 AND guild_id = $2;", [(interaction as any).data.options[0].options[0].value, (interaction as any).channel.guild.id]);
 
-        await interaction.createMessage(`Successfully removed all warnings of <@${interaction.data.options[0].options[0].value}>.`);
+        await interaction.createMessage(`Successfully removed all warnings of <@${(interaction as any).data.options[0].options[0].value}>.`);
         break;
     }
   }

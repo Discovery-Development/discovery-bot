@@ -1,7 +1,8 @@
 // TODO: Permissions stuff
 
-const { colors } = require("../struc/colors");
-const db = require("../struc/db");
+import colors = require("../struc/colors")
+import db = require("../struc/db")
+import Eris = require("eris")
 
 module.exports = {
   name: "tickets",
@@ -39,14 +40,14 @@ module.exports = {
     }
   ],
   description: "The ticket system.",
-  async run(bot, interaction, Eris) {
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     const ticket_creation_embed = {
         title: "Ticket creation",
         description: "Press the button below to create a ticket.",
         color: colors.default
     }
 
-    switch (interaction.data.options[0].name) {
+    switch ((interaction as any).data.options[0].name) {
         case "send":
             return interaction.channel.createMessage({
                 embed: ticket_creation_embed,
@@ -62,7 +63,7 @@ module.exports = {
                 ]
             });
         case "supporters":
-            let support_roles = interaction.data.options[0].options[0].value;
+            let support_roles = (interaction as any).data.options[0].options[0].value;
 
             support_roles = support_roles.replace(/\s/g, "");
 
@@ -76,7 +77,7 @@ module.exports = {
             let final_support_roles = "";
 
             for (let i = 0; i < support_roles.length; i++) {
-                let role = interaction.channel.guild.roles.find(r => r.id === support_roles[i]);
+                let role = (interaction as any).channel.guild.roles.find((r: { id: any }) => r.id === support_roles[i]);
 
                 if (role) {
                     final_support_roles += `${role.id},`;
@@ -87,15 +88,15 @@ module.exports = {
                 return interaction.channel.createMessage("The given roles are invalid.");
             }
 
-            const exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [interaction.channel.guild.id]);
+            const exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
 
             if (exists.length <= 0) {
                 const sql = "INSERT INTO tickets (guild_id, ticket_mod_roles) VALUES ($1, $2)";
-                const binds = [interaction.channel.guild.id, final_support_roles];
+                const binds = [(interaction as any).channel.guild.id, final_support_roles];
                 db.modify(sql, binds);
             } else if (exists.length > 0) {
                 const sql = "UPDATE tickets SET ticket_mod_roles = $1 WHERE guild_id = $2";
-                const binds = [final_support_roles, interaction.channel.guild.id];
+                const binds = [final_support_roles, (interaction as any).channel.guild.id];
                 db.modify(sql, binds);
             }
 
@@ -104,7 +105,7 @@ module.exports = {
 
         case "category":
             // Gotta do the rest of this later
-            let category_id = interaction.data.options[0].options[0].value;
+            let category_id = (interaction as any).data.options[0].options[0].value;
 
             break;
     }

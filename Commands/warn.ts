@@ -1,5 +1,5 @@
-const { colors } = require("../struc/colors");
-const db = require("../struc/db");
+import db = require("../struc/db")
+import Eris = require("eris")
 
 module.exports = {
   name: "warn",
@@ -18,7 +18,7 @@ module.exports = {
     },
   ],
   description: "Warns a member.",
-  async run(bot, interaction, Eris) {
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     let prev_warn_id = await db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;");
 
     if (prev_warn_id.length === 0) {
@@ -29,20 +29,20 @@ module.exports = {
 
     let reason;
 
-    if (!interaction.data.options[1]) {
+    if (!(interaction as any).data.options[1]) {
       reason = "No reason given.";
     } else {
-      reason = interaction.data.options[1].value;
+      reason = (interaction as any).data.options[1].value;
     }
 
     await db.modify("INSERT INTO warnings VALUES($1,$2,$3,$4,$5)", [
-      interaction.channel.guild.id,
-      interaction.data.options[0].value,
-      interaction.member.id,
+      (interaction as any).channel.guild.id,
+      (interaction as any).data.options[0].value,
+      (interaction as any).member.id,
       reason,
       next_warn_id,
     ]);
     
-    await interaction.editOriginalMessage({ content: `Successfully warned <@${interaction.data.options[0].value}>! Reason: \`\`\`${reason}\`\`\`` })
+    await interaction.editOriginalMessage({ content: `Successfully warned <@${(interaction as any).data.options[0].value}>! Reason: \`\`\`${reason}\`\`\`` })
   }
 };

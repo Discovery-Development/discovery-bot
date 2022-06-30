@@ -5,4 +5,5 @@ const colors = {
   default: 0x6e289a,
 };
 
-module.exports = { colors };
+export = colors;
+module.exports = colors;

@@ -1,4 +1,5 @@
-const { colors } = require("../struc/colors");
+import colors = require("../struc/colors")
+import Eris = require("eris")
 
 module.exports = {
   name: "userinfo",
@@ -11,9 +12,9 @@ module.exports = {
     },
   ],
   description: "Returns information about a member.",
-  async run(bot, interaction, Eris) {
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     if (!interaction.data.options) return await interaction.createMessage("Required Argument 'member' missing.");
-    member = await interaction.channel.guild.fetchMembers({userIDs: [interaction.data.options[0].value]});
+    let member = await (interaction as any).channel.guild.fetchMembers({userIDs: [(interaction as any).data.options[0].value]});
 
     if (!member) return interaction.createMessage("Invalid argument provided.");
     member = member[0];
@@ -46,7 +47,7 @@ module.exports = {
       else if (activity.type === 5) activity.type = "Competing in";
     }
 
-    embed = {
+    let embed = {
       author: {
         name: `${member.username}#${member.discriminator} - ${nickname}`,
       },
@@ -65,6 +66,6 @@ module.exports = {
       embed.fields.push({ name: "Activity", value: `${activity.type}: ${activity.name}`, inline: true});
     }
 
-    await interaction.createMessage({ embed: embed });
+    await interaction.createMessage({ embeds: [embed] });
   },
 };

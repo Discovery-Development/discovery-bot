@@ -1,10 +1,11 @@
-const { Pool } = require("pg");
-require("dotenv").config("../.env");
+import { Pool } from "pg";
+import dotEnv from "dotenv";
+dotEnv.config();
 
 const pool = new Pool({
   host: process.env.HOSTNAME,
   user: process.env.DB_USER,
-  port: process.env.PORT,
+  port: parseInt(process.env.PORT!),
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
   max: 10,
@@ -12,13 +13,8 @@ const pool = new Pool({
   idleTimeoutMillis: 0,
 });
 
-/**
-  Returns an Array of dictionaries
- * @param {string} sql - The SQL query to run.
- * @param {Array} binds - The values to bind to the query.
-*/
-async function fetch(sql, binds = undefined) {
-  let returned_fetch;
+async function fetch(sql: string, binds?: Array<any>) {
+  let returned_fetch: any;
   if (binds === undefined) {
     returned_fetch = await pool.query(sql);
   } else if (binds !== undefined) {
@@ -30,7 +26,7 @@ async function fetch(sql, binds = undefined) {
  * @param  {string} sql - The SQL query to run.
  * @param  {Array<Object>} binds - The values to bind to the query.
  */
-async function modify(sql, binds = undefined) {
+async function modify(sql: string, binds?: Array<any>) {
   await pool.query("BEGIN;");
   if (binds === undefined) {
     await pool.query(sql);
@@ -40,15 +36,11 @@ async function modify(sql, binds = undefined) {
 
   await pool.query("COMMIT;");
 }
-/**
- * 
- * @param {string} table - The table to create.
- * @param {string} columns - The columns to create under the table. 
- */
-async function create(table, columns) {
+
+async function create(table: string, columns: string) {
   await pool.query("BEGIN;");
   await pool.query(`CREATE TABLE IF NOT EXISTS ${table}(${columns});`);
   await pool.query("COMMIT;");
 }
 
-module.exports = { fetch, modify, create };
+export { fetch, modify, create };

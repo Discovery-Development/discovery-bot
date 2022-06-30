@@ -1,4 +1,5 @@
-const { colors } = require("../struc/colors");
+import colors = require("../struc/colors")
+import Eris = require("eris")
 
 module.exports = {
   name: "say",
@@ -17,14 +18,14 @@ module.exports = {
     },
   ],
   description: "Repeats your message.",
-  async run(bot, interaction, Eris) {
-    say_embed = {
-      title: interaction.data.options[1].value,
-      description: interaction.data.options[0].value,
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
+    let say_embed = {
+      title: (interaction as any).data.options[1].value,
+      description: (interaction as any).data.options[0].value,
       color: colors.default,
     }
 
-    await interaction.createMessage({ embed: say_embed });
+    await interaction.createMessage({ embeds: [say_embed] });
     throw new Error("sussy baka");
   },
 };

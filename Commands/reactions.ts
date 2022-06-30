@@ -1,5 +1,6 @@
-const { colors } = require("../struc/colors");
-const db = require("../struc/db")
+import colors = require("../struc/colors")
+import db = require("../struc/db")
+import Eris = require("eris")
 
 // TODO: Permissions stuff
 
@@ -58,24 +59,24 @@ module.exports = {
     }
   ],
   description: "Reaction role system",
-  async run(bot, interaction, Eris) {
-    switch (interaction.data.options[0].name) {
+  async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
+    switch ((interaction as any).data.options[0].name) {
       case "add":
-        const exists = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.channel.guild.id]);
+        const exists = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [(interaction as any).data.options[0].options[0].value, (interaction as any).channel.guild.id]);
         
         if (exists.length > 0) {
           await interaction.createMessage("This reaction role has already been set.");
           return;
         }
 
-        message = await bot.getMessage(interaction.channel.id, interaction.data.options[0].options[0].value);
+        let message = await bot.getMessage(interaction.channel.id, (interaction as any).data.options[0].options[0].value);
         if (!message) {
           await interaction.createMessage("Message not found.");
           return;
         }
 
-        let role_id = interaction.data.options[0].options[1].value;
-        let emoji = interaction.data.options[0].options[2].value;
+        let role_id = (interaction as any).data.options[0].options[1].value;
+        let emoji = (interaction as any).data.options[0].options[2].value;
 
         // Check if the emoji starts with <: and ends with >
         if (emoji.startsWith("<:") && emoji.endsWith(">")) {
@@ -83,14 +84,14 @@ module.exports = {
           emoji = emoji.replace(/<:/g, "").replace(/>/g, "");
         }
 
-        await db.modify("INSERT INTO reaction_roles(guild_id, message_id, role_id, emoji) VALUES ($1, $2, $3, $4);", [interaction.channel.guild.id, message.id, role_id, interaction.data.options[0].options[2].value]);
+        await db.modify("INSERT INTO reaction_roles(guild_id, message_id, role_id, emoji) VALUES ($1, $2, $3, $4);", [(interaction as any).channel.guild.id, message.id, role_id, (interaction as any).data.options[0].options[2].value]);
 
         await message.addReaction(emoji);
         await interaction.createMessage("Reaction role added.");
         break;
 
       case "list":
-        const fetched_reaction_roles = await db.fetch("SELECT * FROM reaction_roles WHERE guild_id = $1;", [interaction.channel.guild.id]);
+        const fetched_reaction_roles = await db.fetch("SELECT * FROM reaction_roles WHERE guild_id = $1;", [(interaction as any).channel.guild.id]);
 
         let list_embed = {
           "title": "Reaction roles in this server",
@@ -105,29 +106,29 @@ module.exports = {
           list_embed.description = "No reaction roles have been added.";
         }
 
-        await interaction.createMessage({embed: list_embed});
+        await interaction.createMessage({embeds: [list_embed]});
         break;
       
       case "remove":
         let msg;
 
-        const exists_remove = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.data.options[0].options[1].value]);
+        const exists_remove = await db.fetch("SELECT * FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [(interaction as any).data.options[0].options[0].value, (interaction as any).data.options[0].options[1].value]);
 
         if (exists_remove.length === 0) {
           await interaction.createMessage("This reaction role does not exist.");
           return;
         }
 
-        db.modify("DELETE FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [interaction.data.options[0].options[0].value, interaction.data.options[0].options[1].value]);
+        db.modify("DELETE FROM reaction_roles WHERE message_id = $1 AND emoji = $2;", [(interaction as any).data.options[0].options[0].value, (interaction as any).data.options[0].options[1].value]);
 
         try {
-          msg = await bot.getMessage(interaction.channel.id, interaction.data.options[0].options[0].value);
+          msg = await bot.getMessage(interaction.channel.id, (interaction as any).data.options[0].options[0].value);
         } catch(err) {
           () => {};
         }
 
         if (msg) {
-          let emoji = interaction.data.options[0].options[1].value;
+          let emoji = (interaction as any).data.options[0].options[1].value;
 
           // Check if the emoji starts with <: and ends with >
           if (emoji.startsWith("<:") && emoji.endsWith(">")) {

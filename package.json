@@ -4,14 +4,20 @@
   "description": "A powerful, multi-functional, general-purpose Discord Bot.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "ts-node index.ts",
+    "build": "tsc"
   },
   "author": "Pickles#3524",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.0",
     "eris": "github:abalabahaha/eris#dev",
-    "fs": "^0.0.1-security",
     "pg": "^8.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/pg": "^8.6.5",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4"
   }
 }
