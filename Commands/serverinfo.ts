@@ -1,4 +1,4 @@
-import colors = require("../struc/colors")
+import colors = require("../base/Colors")
 import Eris = require("eris")
 
 module.exports = {

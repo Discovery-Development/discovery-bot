@@ -1,5 +1,5 @@
-import colors = require("../struc/colors")
-import db = require("../struc/db")
+import colors = require("../base/Colors")
+import db = require("../base/Database")
 import Eris = require("eris")
 
 // TODO: Permissions stuff

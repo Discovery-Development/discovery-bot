@@ -1,4 +1,4 @@
-import db = require("../struc/db")
+import db = require("../base/Database")
 import Eris = require("eris")
 
 module.exports = {

@@ -1,8 +1,9 @@
 // TODO: Permissions stuff
 
-import colors = require("../struc/colors")
-import db = require("../struc/db")
+import colors = require("../base/Colors")
+import db = require("../base/Database")
 import Eris = require("eris")
+import { strictEqual } from "assert";
 
 module.exports = {
   name: "tickets",
@@ -37,6 +38,32 @@ module.exports = {
                 required: true,
             },
         ],
+    },
+    {
+        type: 1,
+        name: "log_channel",
+        description: "Define the ticket log channel.",
+        options: [
+            {
+                type: 7,
+                name: "log_channel",
+                description: "The ticket log channel.",
+                required: true,
+            },
+        ],
+    },
+    {
+        type: 1,
+        name: "open_msg",
+        description: "Define the ticket open message.",
+        options: [
+            {
+                type: 3,
+                name: "open_msg",
+                description: "The ticket log channel.",
+                required: true,
+            },
+        ],
     }
   ],
   description: "The ticket system.",
@@ -49,6 +76,7 @@ module.exports = {
 
     switch ((interaction as any).data.options[0].name) {
         case "send":
+            interaction.createMessage({ content: "The embed has been created! If you haven't already make sure to define the required values using the other ticket commands, if you don't, it won't work.", flags: 64 })
             return interaction.channel.createMessage({
                 embed: ticket_creation_embed,
                 components: [
@@ -56,7 +84,7 @@ module.exports = {
                         type: 1,
                         components: [
                             {
-                                type: 2, label: "Create a ticket", style: 1, custom_id: "ticket_creation_button"
+                                type: 2, label: "Create a ticket", style: 1, custom_id: "ticket_creation_button", disabled: false
                             }
                         ]
                     }
@@ -85,16 +113,16 @@ module.exports = {
             }
 
             if (final_support_roles.length <= 0) {
-                return interaction.channel.createMessage("The given roles are invalid.");
+                return interaction.createMessage("The given roles are invalid.");
             }
 
-            const exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
+            const support_roles_exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
 
-            if (exists.length <= 0) {
+            if (support_roles_exists.length <= 0) {
                 const sql = "INSERT INTO tickets (guild_id, ticket_mod_roles) VALUES ($1, $2)";
                 const binds = [(interaction as any).channel.guild.id, final_support_roles];
                 db.modify(sql, binds);
-            } else if (exists.length > 0) {
+            } else if (support_roles_exists.length > 0) {
                 const sql = "UPDATE tickets SET ticket_mod_roles = $1 WHERE guild_id = $2";
                 const binds = [final_support_roles, (interaction as any).channel.guild.id];
                 db.modify(sql, binds);
@@ -104,10 +132,61 @@ module.exports = {
             break;
 
         case "category":
-            // Gotta do the rest of this later
             let category_id = (interaction as any).data.options[0].options[0].value;
 
+            const category = bot.getChannel(category_id);
+
+            const category_exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
+
+            if (category_exists.length <= 0) {
+                const sql = "INSERT INTO tickets (guild_id, ticket_category_id) VALUES ($1, $2)";
+                const binds = [(interaction as any).channel.guild.id, category.id];
+                db.modify(sql, binds);
+            } else if (category_exists.length > 0) {
+                const sql = "UPDATE tickets SET ticket_category_id = $1 WHERE guild_id = $2";
+                const binds = [category.id, (interaction as any).channel.guild.id];
+                db.modify(sql, binds);
+            }
+
+            await interaction.createMessage("Successfully set the ticket category!");
             break;
+        case "log_channel":
+            let log_channel_id = (interaction as any).data.options[0].options[0].value;
+
+            const log_channel = bot.getChannel(log_channel_id);
+
+            const log_channel_exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
+
+            if (log_channel_exists.length <= 0) {
+                const sql = "INSERT INTO tickets (guild_id, ticket_log_channel_id) VALUES ($1, $2)";
+                const binds = [(interaction as any).channel.guild.id, log_channel.id];
+                db.modify(sql, binds);
+            } else if (log_channel_exists.length > 0) {
+                const sql = "UPDATE tickets SET ticket_log_channel_id = $1 WHERE guild_id = $2";
+                const binds = [log_channel.id, (interaction as any).channel.guild.id];
+                db.modify(sql, binds);
+            }
+            
+            await interaction.createMessage("Successfully set the ticket log channel!");
+            break;
+            
+            case "open_msg":
+                let open_msg = (interaction as any).data.options[0].options[0].value;
+    
+                const open_msg_exists = await db.fetch("SELECT * FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
+    
+                if (log_channel_exists.length <= 0) {
+                    const sql = "INSERT INTO tickets (guild_id, ticket_open_message) VALUES ($1, $2)";
+                    const binds = [(interaction as any).channel.guild.id, open_msg];
+                    db.modify(sql, binds);
+                } else if (log_channel_exists.length > 0) {
+                    const sql = "UPDATE tickets SET ticket_open_message = $1 WHERE guild_id = $2";
+                    const binds = [open_msg, (interaction as any).channel.guild.id];
+                    db.modify(sql, binds);
+                }
+                
+                await interaction.createMessage("Successfully set the ticket open message!");
+                break;
     }
   },
 };
