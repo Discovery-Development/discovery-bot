@@ -375,8 +375,3 @@ bot.on("channelDelete", async (channel: Eris.AnyChannel) => {
 
 console.time("ready");
 bot.connect();
-
-/*process.on("uncaughtException", (err) => {
-  console.log(`[${cliColors.red}ERROR${cliColors.reset}] An error unrelated to Eris occured in the main process => \n\n${err}\n`);
-  process.exit();
-});*/
