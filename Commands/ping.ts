@@ -3,12 +3,11 @@ import Eris = require("eris")
 
 module.exports = {
   name: "ping",
-  permission: BigInt(1 << 3),
   description: "Returns current API ping and shard ping.",
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     const shard = (interaction as any).channel.guild.shard;
     const before = new Date().getTime();
-    const msg = await interaction.createMessage("🏓Pong!");
+    await interaction.createMessage("🏓Pong!");
     const after = new Date().getTime();
     const ping = after - before;
 

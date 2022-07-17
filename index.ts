@@ -4,9 +4,13 @@ import dotEnv from "dotenv";
 import colors from "./base/Colors";
 import cliColors from "./base/CLIColors";
 import db = require("./base/Database");
+import fs = require("fs");
 dotEnv.config();
 
 const bot = new Eris.Client((process.env.TOKEN as string), {
+  firstShardID: 0,
+  lastShardID: 15,
+  maxShards: 16,
   getAllUsers: true,
   intents: [
     "guilds",
@@ -17,7 +21,7 @@ const bot = new Eris.Client((process.env.TOKEN as string), {
     "guildPresences",
     "guildMessageReactions"
   ],
-  restMode: true
+  restMode: false
 });
 
 (bot as any).commands = new Map();
@@ -46,8 +50,13 @@ bot.on("ready", async () => {
     });
 
     console.log(`Created "${command.name}" application command.`);
-    db.modify("DELETE FROM ticket_data"); // ONLY for testing purposes
+    //db.modify("DELETE FROM ticket_data"); // ONLY for testing purposes
   }
+  console.timeEnd("ready");
+});
+
+bot.on("shardReady", (id) => {
+  console.log(`Shard ${id} ready!`);
 });
 
 // Slash-command handler
@@ -124,6 +133,7 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
         ], flags: 64
       });
     } else if (interaction.data.custom_id === "ticket_creation_reason_dropdown") {
+      await interaction.deferUpdate();
       const options = [
         {
           label: "Support",
@@ -172,7 +182,24 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
 
       let ticket_channel = await bot.createChannel((interaction as any).channel.guild.id, `ticket-${interaction.member?.username}`, 0, { parentID: ticket_category.id });
 
-      await ticket_channel.createMessage({ embeds: [ticket_opened_embed] });
+      const now = Math.round((new Date()).getTime() / 1000);
+
+      await ticket_channel.createMessage({ embeds: [ticket_opened_embed], 
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              label: "Close Ticket",
+              style: 1,
+              custom_id: "ticket_close_button",
+              disabled: false
+            },
+          ],
+        },
+      ]
+    });
 
       await ticket_channel.editPermission((interaction.member?.id as string), 0x0000000000000400, 0x0000010000000000, 1, "PLACEHOLDER");
 
@@ -194,7 +221,7 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
       ] 
     });
       // TODO: Ticket logging
-      let ticket_binds = [ (interaction as any).channel.guild.id, ticket_channel.id, ticket_channel.name, interaction.member?.id, "PLACEHOLDER", (interaction as any).data.values[0] ];
+      let ticket_binds = [ (interaction as any).channel.guild.id, ticket_channel.id, ticket_channel.name, interaction.member?.id, now.toString(), (interaction as any).data.values[0] ];
 
       db.modify("INSERT INTO ticket_data(guild_id, channel_id, name, creator_id, open_time, ticket_open_reason) VALUES($1,$2,$3,$4,$5,$6);", ticket_binds);
 
@@ -203,9 +230,57 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
       const ticket_log_channel: Eris.TextChannel = await (bot as any).getChannel(ticket_log_channel_id[0].ticket_log_channel_id);
 
       if (ticket_log_channel) {
-        await ticket_log_channel.createMessage("PLACEHOLDER");
+        const ticket_embed = {
+          title: "New ticket has been opened",
+          color: colors.default,
+          fields: [
+            { name: "Creator", value: `<@!${interaction.member?.id}>` },
+            { name: "Channel", value: `<#${ticket_channel.id}>` },
+            { name: "Opened at", value: `<t:${now}>` },
+            { name: "Creation Reason", value: (interaction as any).data.values[0] }
+          ]
+        };
+        await ticket_log_channel.createMessage({embeds: [ ticket_embed ]});
+      }
+    } else if (interaction.data.custom_id === "ticket_close_button") {
+      const now = Math.round((new Date()).getTime() / 1000);
+
+      await db.modify("UPDATE ticket_data SET closed_by_id = $1 WHERE channel_id = $2", [interaction.member?.id, interaction.channel.id]);
+      await db.modify("UPDATE ticket_data SET close_time = $1 WHERE channel_id = $2", [now.toString(), interaction.channel.id]);
+
+      let ticket_log_channel_id = await db.fetch("SELECT ticket_log_channel_id FROM tickets WHERE guild_id = $1", [(interaction as any).channel.guild.id]);
+
+      let ticket_log_channel: Eris.TextChannel = (bot as any).getChannel(ticket_log_channel_id[0].ticket_log_channel_id);
+
+      await interaction.deferUpdate();
+
+      if (ticket_log_channel) {
+        let ticket_data = await db.fetch("SELECT * FROM ticket_data WHERE channel_id = $1", [interaction.channel.id]);
+        let ticket_log_embed = {
+            title: "Ticket has been closed",
+            fields: [
+                {name: "Ticket Name", value: `${ticket_data[0].name}`},
+                {name: "Ticket Creator", value: `<@${ticket_data[0].creator_id}>`},
+                {name: "Ticket Creation Reason", value: `${ticket_data[0].ticket_open_reason}`},
+                {name: "Ticket Creation Time", value: `<t:${ticket_data[0].open_time}>`},
+                {name: "Ticket Closer", value: `<@${ticket_data[0].closed_by_id}>`},
+                {name: "Ticket Closing Time", value: `<t:${now}>`},
+                {name: "Ticket Closing Reason", value: `\`\`\`No reason provided.\`\`\``}
+            ],
+            color: colors.default
+        }
+        
+        fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
+          await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-${interaction.member?.username}.txt`});
+          fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
+        });
       }
 
+      await db.modify("DELETE FROM ticket_data WHERE channel_id = $1", [interaction.channel.id]);
+      await interaction.createMessage("Ticket will be closed in 5 seconds.");
+      setTimeout(async () => {
+          await bot.deleteChannel(interaction.channel.id, "Ticket was closed.");
+      }, 5000);
     }
   }
 });
@@ -250,6 +325,55 @@ bot.on("messageReactionRemove", async (message:Eris.Message, emoji: { name: stri
   }
 });
 
+bot.on("messageCreate", async (message: Eris.Message) => {
+  let ticket_channel_id = await db.fetch("SELECT channel_id FROM ticket_data WHERE channel_id = $1", [message.channel.id]);
+
+  if (ticket_channel_id.length > 0) {
+    let ticket_transcript = await db.fetch("SELECT transcript FROM ticket_data WHERE channel_id = $1", [message.channel.id]);
+    ticket_transcript = ticket_transcript[0].transcript;
+
+    if(!ticket_transcript) ticket_transcript = `Transcript of ${(message as any).channel.name}`;
+
+    ticket_transcript += `\n[Message from ${(message as any).member?.username + (message as any).member?.discriminator}, Creation Time: ${message.createdAt}]\n${message.content}`;
+
+    await db.modify("UPDATE ticket_data SET transcript = $1 WHERE channel_id = $2", [ ticket_transcript, message.channel.id]);
+  }
+});
+
+bot.on("channelDelete", async (channel: Eris.AnyChannel) => {
+  const now = Math.round((new Date()).getTime() / 1000);
+
+      await db.modify("UPDATE ticket_data SET closed_by_id = $1 WHERE channel_id = $2", [0, channel.id]);
+      await db.modify("UPDATE ticket_data SET close_time = $1 WHERE channel_id = $2", [now.toString(), channel.id]);
+
+      let ticket_log_channel_id = await db.fetch("SELECT ticket_log_channel_id FROM tickets WHERE guild_id = $1", [(channel as any).guild.id]);
+
+      let ticket_log_channel: Eris.TextChannel = (bot as any).getChannel(ticket_log_channel_id[0].ticket_log_channel_id);
+
+      if (ticket_log_channel) {
+        let ticket_data = await db.fetch("SELECT * FROM ticket_data WHERE channel_id = $1", [channel.id]);
+        let ticket_log_embed = {
+            title: "Ticket has been closed",
+            fields: [
+                {name: "Ticket Name", value: `${ticket_data[0].name}`},
+                {name: "Ticket Creator", value: `<@${ticket_data[0].creator_id}>`},
+                {name: "Ticket Creation Reason", value: `${ticket_data[0].ticket_open_reason}`},
+                {name: "Ticket Creation Time", value: `<t:${ticket_data[0].open_time}>`},
+                {name: "Ticket Closer", value: `<@${ticket_data[0].closed_by_id}>`},
+                {name: "Ticket Closing Time", value: `<t:${now}>`},
+                {name: "Ticket Closing Reason", value: `\`\`\`No reason provided.\`\`\``}
+            ],
+            color: colors.default
+        }
+        
+        fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
+          await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-transcript.txt`});
+          fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
+        });
+      }
+});
+
+console.time("ready");
 bot.connect();
 
 /*process.on("uncaughtException", (err) => {
