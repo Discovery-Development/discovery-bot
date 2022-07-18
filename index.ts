@@ -8,9 +8,9 @@ import fs = require("fs");
 dotEnv.config();
 
 const bot = new Eris.Client((process.env.TOKEN as string), {
-  firstShardID: 0,
+  /*firstShardID: 0,
   lastShardID: 15,
-  maxShards: 16,
+  maxShards: 16,*/
   getAllUsers: true,
   intents: [
     "guilds",
@@ -42,17 +42,17 @@ bot.on("ready", async () => {
   for (const cmd of (bot as any).commands) {
     const command = (bot as any).commands.get(cmd[0]);
 
-    bot.createGuildCommand(guildId, {
+    (bot as any).createGuildCommand(guildId, {
       name: command.name,
       description: command.description,
       options: command.options || undefined,
       type: 1,
+      default_member_permissions: command.default_member_permissions
     });
 
     console.log(`Created "${command.name}" application command.`);
-    //db.modify("DELETE FROM ticket_data"); // ONLY for testing purposes
   }
-  console.timeEnd("ready");
+  //console.timeEnd("ready");
 });
 
 bot.on("shardReady", (id) => {
@@ -70,8 +70,10 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
     const permission = command.permission;
 
     if (command && permission) {
+      let permissionString = new Eris.Permission(permission);
+      permissionString.toString();
       if (interaction.member?.permissions.has(permission)) await command.run(bot, interaction);
-      else return interaction.createMessage({ content: `You are missing the following permission: ${permission}\n\nIf you think this is a mistake, please contact the bot's developer.`, flags: 64});
+      else return interaction.createMessage({ content: `You are missing the following permission: ${permissionString}\n\nIf you think this is a mistake, please contact the bot's developer.`, flags: 64});
     } else if (command && !permission) {
       await command.run(bot, interaction);
     }
@@ -220,7 +222,6 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
         },
       ] 
     });
-      // TODO: Ticket logging
       let ticket_binds = [ (interaction as any).channel.guild.id, ticket_channel.id, ticket_channel.name, interaction.member?.id, now.toString(), (interaction as any).data.values[0] ];
 
       db.modify("INSERT INTO ticket_data(guild_id, channel_id, name, creator_id, open_time, ticket_open_reason) VALUES($1,$2,$3,$4,$5,$6);", ticket_binds);
@@ -270,17 +271,21 @@ bot.on("interactionCreate", async (interaction: Eris.Interaction) => {
             color: colors.default
         }
         
-        fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
-          await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-${interaction.member?.username}.txt`});
-          fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
-        });
+        if (ticket_data[0].transcript) {
+          fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
+            await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-${interaction.member?.username}.txt`});
+            fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
+          });
+        } else {
+          await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] });
+        }
       }
 
       await db.modify("DELETE FROM ticket_data WHERE channel_id = $1", [interaction.channel.id]);
-      await interaction.createMessage("Ticket will be closed in 5 seconds.");
+      await interaction.createMessage("Ticket will be closed in 10 seconds.");
       setTimeout(async () => {
           await bot.deleteChannel(interaction.channel.id, "Ticket was closed.");
-      }, 5000);
+      }, 10000);
     }
   }
 });
@@ -341,37 +346,51 @@ bot.on("messageCreate", async (message: Eris.Message) => {
 });
 
 bot.on("channelDelete", async (channel: Eris.AnyChannel) => {
+  let isTicket = await db.fetch("SELECT * FROM ticket_data WHERE channel_id = $1", [channel.id]);
+
+  if (isTicket.length <= 0) return;
+
   const now = Math.round((new Date()).getTime() / 1000);
 
-      await db.modify("UPDATE ticket_data SET closed_by_id = $1 WHERE channel_id = $2", [0, channel.id]);
-      await db.modify("UPDATE ticket_data SET close_time = $1 WHERE channel_id = $2", [now.toString(), channel.id]);
+  await db.modify("UPDATE ticket_data SET closed_by_id = $1 WHERE channel_id = $2", [0, channel.id]);
+  await db.modify("UPDATE ticket_data SET close_time = $1 WHERE channel_id = $2", [now.toString(), channel.id]);
 
-      let ticket_log_channel_id = await db.fetch("SELECT ticket_log_channel_id FROM tickets WHERE guild_id = $1", [(channel as any).guild.id]);
+  let ticket_log_channel_id = await db.fetch("SELECT ticket_log_channel_id FROM tickets WHERE guild_id = $1", [(channel as any).guild.id]);
 
-      let ticket_log_channel: Eris.TextChannel = (bot as any).getChannel(ticket_log_channel_id[0].ticket_log_channel_id);
+  let ticket_log_channel: Eris.TextChannel = (bot as any).getChannel(ticket_log_channel_id[0].ticket_log_channel_id);
 
-      if (ticket_log_channel) {
-        let ticket_data = await db.fetch("SELECT * FROM ticket_data WHERE channel_id = $1", [channel.id]);
-        let ticket_log_embed = {
-            title: "Ticket has been closed",
-            fields: [
-                {name: "Ticket Name", value: `${ticket_data[0].name}`},
-                {name: "Ticket Creator", value: `<@${ticket_data[0].creator_id}>`},
-                {name: "Ticket Creation Reason", value: `${ticket_data[0].ticket_open_reason}`},
-                {name: "Ticket Creation Time", value: `<t:${ticket_data[0].open_time}>`},
-                {name: "Ticket Closer", value: `<@${ticket_data[0].closed_by_id}>`},
-                {name: "Ticket Closing Time", value: `<t:${now}>`},
-                {name: "Ticket Closing Reason", value: `\`\`\`No reason provided.\`\`\``}
-            ],
-            color: colors.default
-        }
-        
-        fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
-          await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-transcript.txt`});
-          fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
-        });
-      }
+  if (ticket_log_channel) {
+    let ticket_data = await db.fetch("SELECT * FROM ticket_data WHERE channel_id = $1", [channel.id]);
+    let ticket_log_embed = {
+      title: "Ticket has been closed",
+      fields: [
+          {name: "Ticket Name", value: `${ticket_data[0].name}`},
+          {name: "Ticket Creator", value: `<@${ticket_data[0].creator_id}>`},
+          {name: "Ticket Creation Reason", value: `${ticket_data[0].ticket_open_reason}`},
+          {name: "Ticket Creation Time", value: `<t:${ticket_data[0].open_time}>`},
+          {name: "Ticket Closer", value: `<@${ticket_data[0].closed_by_id}>`},
+          {name: "Ticket Closing Time", value: `<t:${now}>`},
+          {name: "Ticket Closing Reason", value: `\`\`\`No reason provided.\`\`\``}
+      ],
+      color: colors.default
+    }
+    
+    if (ticket_data[0].transcript) {
+      fs.writeFile(`./tmp/ticket-${ticket_data[0].channel_id}.txt`, ticket_data[0].transcript, async () => {
+        await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] }, {file: fs.readFileSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`), name: `ticket-transcript.txt`});
+        fs.unlinkSync(`./tmp/ticket-${ticket_data[0].channel_id}.txt`)
+      });
+    } else {
+      await ticket_log_channel.createMessage({ embeds: [ticket_log_embed] });
+    }
+  }
+
+  await db.modify("DELETE FROM ticket_data WHERE channel_id = $1", [channel.id]);
+  await (channel as any).createMessage("Ticket will be closed in 10 seconds.");
+  setTimeout(async () => {
+      await bot.deleteChannel(channel.id, "Ticket was closed.");
+  }, 10000);
 });
 
-console.time("ready");
+//console.time("ready");
 bot.connect();

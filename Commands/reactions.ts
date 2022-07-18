@@ -6,7 +6,6 @@ import Eris = require("eris")
 
 module.exports = {
   name: "reactions",
-  
   options: [
     {
       type: 1,
@@ -58,6 +57,7 @@ module.exports = {
       ]
     }
   ],
+  permission: BigInt(1 << 28 | 	1 << 1),
   description: "Reaction role system",
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     switch ((interaction as any).data.options[0].name) {

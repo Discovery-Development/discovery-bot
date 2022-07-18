@@ -38,6 +38,7 @@ module.exports = {
     },
   ],
   description: "The warning system.",
+  permission: BigInt(1 << 1),
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     switch ((interaction as any).data.options[0].name) {
       /*

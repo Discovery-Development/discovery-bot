@@ -13,6 +13,7 @@ module.exports = {
       max_value: 100,
     },
   ],
+  permission: BigInt(1 << 13),
   description: "Clears an amount of messages.",
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     return (interaction as any).channel.purge({ limit: (interaction as any).data.options[0].value }).then((amount: number) => {return interaction.createMessage(`Successfully deleted ${amount} messages.`);})

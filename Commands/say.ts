@@ -17,7 +17,8 @@ module.exports = {
       required: true,
     },
   ],
-  description: "Repeats your message.",
+  description: "Repeats your message in a nice embed.",
+  permission: BigInt(1 << 13),
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     let say_embed = {
       title: (interaction as any).data.options[1].value,

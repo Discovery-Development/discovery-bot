@@ -18,6 +18,7 @@ module.exports = {
     },
   ],
   description: "Warns a member.",
+  permission: BigInt(1 << 1),
   async run(bot: Eris.Client, interaction: Eris.CommandInteraction) {
     let prev_warn_id = await db.fetch("SELECT id FROM warnings ORDER BY id DESC LIMIT 1;");
 
