@@ -1,6 +1,6 @@
 {
   "name": "discovery-bot",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A powerful, multi-functional, general-purpose Discord Bot.",
   "main": "index.js",
   "scripts": {
@@ -19,5 +19,13 @@
     "@types/pg": "^8.6.5",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Discovery-Development/discovery-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Discovery-Development/discovery-bot/issues"
+  },
+  "homepage": "https://github.com/Discovery-Development/discovery-bot#readme"
 }
